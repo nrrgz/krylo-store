@@ -1,6 +1,10 @@
 import { Link } from 'react-router-dom';
+import { useAppSelector } from '../../app/hooks';
+import { selectCartItemCount } from '../../features/cart/cartSlice';
 
 export function Header() {
+  const cartCount = useAppSelector(selectCartItemCount);
+
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
       <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
@@ -14,9 +18,11 @@ export function Header() {
           </Link>
           <Link to="/cart" className="relative text-gray-600 hover:text-gray-900 flex items-center gap-2 font-medium transition-colors">
             Cart
-            <span className="flex items-center justify-center bg-black text-white text-xs rounded-full w-5 h-5 font-semibold">
-              0
-            </span>
+            {cartCount > 0 && (
+              <span className="flex items-center justify-center bg-black text-white text-xs rounded-full w-5 h-5 font-semibold">
+                {cartCount}
+              </span>
+            )}
           </Link>
         </nav>
       </div>
