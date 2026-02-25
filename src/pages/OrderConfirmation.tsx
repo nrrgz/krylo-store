@@ -1,12 +1,58 @@
+import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
+import type { Order } from '../types';
 
 export function OrderConfirmation() {
   const { id } = useParams();
+  const [order, setOrder] = useState<Order | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Mock static data
-  const orderId = id || 'ORD-KRY-88912';
+  useEffect(() => {
+    try {
+      const stored = sessionStorage.getItem('krylo-last-order');
+      if (stored) {
+        const parsed = JSON.parse(stored) as Order;
+        if (parsed.orderId === id) {
+          setOrder(parsed);
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse last order', e);
+    } finally {
+      setLoading(false);
+    }
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div className="container-base py-24 flex justify-center items-center">
+        <div className="animate-pulse flex flex-col items-center w-full max-w-lg">
+          <div className="w-20 h-20 bg-[var(--surface-2)] rounded-full mb-8 shadow-sm"></div>
+          <div className="h-8 bg-[var(--surface-2)] rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-[var(--surface-2)] rounded w-1/2 mb-10"></div>
+          <div className="h-64 bg-[var(--surface-2)] rounded-xl w-full mb-12"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!order) {
+    return (
+      <div className="container-base py-24 flex flex-col items-center text-center">
+        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-4">
+          Order Not Found
+        </h1>
+        <p className="text-gray-500 mb-8 max-w-md mx-auto">
+          We couldn't locate details for this order, or it may have been from a previous session.
+        </p>
+        <Link to="/products">
+          <Button size="lg">Continue Shopping</Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="container-base py-24 flex flex-col items-center text-center">
@@ -38,10 +84,10 @@ export function OrderConfirmation() {
       </p>
 
       <p className="text-gray-500 font-medium mb-10">
-        Order ID: <span className="text-gray-900">{orderId}</span>
+        Order ID: <span className="text-gray-900">{order.orderId}</span>
       </p>
 
-      {/* Mock Summary Card */}
+      {/* Summary Card */}
       <Card className="w-full max-w-lg mb-12 text-left bg-gray-50/50 border-gray-100 shadow-sm">
         <CardContent className="p-6 md:p-8">
           <h2 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-4">
@@ -49,32 +95,33 @@ export function OrderConfirmation() {
           </h2>
 
           <div className="flex flex-col gap-4 mb-6">
-            <div className="flex justify-between items-start">
-              <span className="text-gray-600 font-medium">Krylo Pro Keyboard (x1)</span>
-              <span className="text-gray-900 font-medium">$149.99</span>
-            </div>
-            <div className="flex justify-between items-start">
-              <span className="text-gray-600 font-medium">Merino Wool Desk Mat (x2)</span>
-              <span className="text-gray-900 font-medium">$119.98</span>
-            </div>
+            {order.items.map((item) => (
+              <div key={`${item.productId}-${item.selectedColor.name}`} className="flex justify-between items-start">
+                <div className="flex flex-col">
+                  <span className="text-gray-600 font-medium">{item.name} (x{item.quantity})</span>
+                  <span className="text-xs text-gray-400">Color: {item.selectedColor.name}</span>
+                </div>
+                <span className="text-gray-900 font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+              </div>
+            ))}
           </div>
 
           <div className="pt-4 border-t border-gray-200 flex flex-col gap-2">
             <div className="flex justify-between text-sm text-gray-500">
               <span>Subtotal</span>
-              <span>$269.97</span>
+              <span>${order.totals.subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-500">
               <span>Shipping</span>
-              <span>Free</span>
+              <span>{order.totals.shipping === 0 ? 'Free' : `$${order.totals.shipping.toFixed(2)}`}</span>
             </div>
             <div className="flex justify-between text-sm text-gray-500">
               <span>Tax</span>
-              <span>$21.60</span>
+              <span>${order.totals.tax.toFixed(2)}</span>
             </div>
             <div className="flex justify-between items-center text-lg font-bold text-gray-900 mt-2 pt-2 border-t border-gray-200">
               <span>Total paid</span>
-              <span>$291.57</span>
+              <span>${order.totals.total.toFixed(2)}</span>
             </div>
           </div>
         </CardContent>
