@@ -1,21 +1,48 @@
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
+import { useAppDispatch, useAppSelector } from '../app/hooks';
+import { selectCartItems, selectCartSubtotal, clearCart } from '../features/cart/cartSlice';
 
 export function Checkout() {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const items = useAppSelector(selectCartItems);
+  const subtotal = useAppSelector(selectCartSubtotal);
 
-  // Mock data for the summary
-  const subtotal = 269.97;
-  const tax = 21.60;
+  if (items.length === 0) {
+    return <Navigate to="/cart" replace />;
+  }
+
+  const tax = subtotal * 0.10; // 10% tax
   const shipping = 0.00;
   const total = subtotal + tax + shipping;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // Temporary redirect for UI mockup purposes
-    navigate('/order/demo');
+    const formData = new FormData(e.currentTarget);
+    const orderId = `ORD-${Date.now()}`;
+    const order = {
+      orderId,
+      createdAt: new Date().toISOString(),
+      customer: {
+        name: formData.get('fullName') as string,
+        email: formData.get('email') as string,
+        address: `${formData.get('address')}, ${formData.get('city')} ${formData.get('postalCode')}`,
+      },
+      items,
+      totals: {
+        subtotal,
+        shipping,
+        tax,
+        total,
+      },
+    };
+
+    sessionStorage.setItem('krylo-last-order', JSON.stringify(order));
+    dispatch(clearCart());
+    navigate(`/order/${orderId}`);
   };
 
   return (
@@ -25,7 +52,7 @@ export function Checkout() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Checkout Form */}
         <div className="lg:col-span-7 xl:col-span-8">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+          <form id="checkout-form" onSubmit={handleSubmit} className="flex flex-col gap-8">
 
             {/* Contact Information */}
             <section>
@@ -37,19 +64,19 @@ export function Checkout() {
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                     Email address
                   </label>
-                  <Input type="email" id="email" required placeholder="you@example.com" />
+                  <Input name="email" type="email" id="email" required placeholder="you@example.com" />
                 </div>
                 <div>
                   <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
                     Full name
                   </label>
-                  <Input type="text" id="fullName" required placeholder="John Doe" />
+                  <Input name="fullName" type="text" id="fullName" required placeholder="John Doe" />
                 </div>
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                     Phone number
                   </label>
-                  <Input type="tel" id="phone" required placeholder="(555) 123-4567" />
+                  <Input name="phone" type="tel" id="phone" required placeholder="(555) 123-4567" />
                 </div>
               </div>
             </section>
@@ -64,19 +91,19 @@ export function Checkout() {
                   <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                     Street address
                   </label>
-                  <Input type="text" id="address" required placeholder="123 Main St" />
+                  <Input name="address" type="text" id="address" required placeholder="123 Main St" />
                 </div>
                 <div>
                   <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
                     City
                   </label>
-                  <Input type="text" id="city" required placeholder="San Francisco" />
+                  <Input name="city" type="text" id="city" required placeholder="San Francisco" />
                 </div>
                 <div>
                   <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
                     Postal code
                   </label>
-                  <Input type="text" id="postalCode" required placeholder="94105" />
+                  <Input name="postalCode" type="text" id="postalCode" required placeholder="94105" />
                 </div>
               </div>
             </section>
@@ -108,28 +135,22 @@ export function Checkout() {
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
 
-              {/* Mock Items list brief */}
+              {/* Items list */}
               <div className="flex flex-col gap-3 pb-4 border-b border-gray-200">
-                <div className="flex justify-between items-start text-sm">
-                  <div className="flex gap-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900 line-clamp-1">Krylo Pro Keyboard</p>
-                      <p className="text-gray-500">Qty: 1</p>
+                {items.map((item) => (
+                  <div key={`${item.productId}-${item.selectedColor.name}`} className="flex justify-between items-start text-sm">
+                    <div className="flex gap-3">
+                      <div className="w-12 h-12 bg-gray-200 rounded shrink-0 overflow-hidden">
+                        {item.image && <img src={item.image} alt={item.name} className="w-full h-full object-cover" />}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900 line-clamp-1">{item.name}</p>
+                        <p className="text-gray-500">Qty: {item.quantity}</p>
+                      </div>
                     </div>
+                    <span className="font-medium text-gray-900">${(item.price * item.quantity).toFixed(2)}</span>
                   </div>
-                  <span className="font-medium text-gray-900">$149.99</span>
-                </div>
-                <div className="flex justify-between items-start text-sm">
-                  <div className="flex gap-3">
-                    <div className="w-12 h-12 bg-gray-200 rounded shrink-0" />
-                    <div>
-                      <p className="font-medium text-gray-900 line-clamp-1">Merino Wool Desk Mat</p>
-                      <p className="text-gray-500">Qty: 2</p>
-                    </div>
-                  </div>
-                  <span className="font-medium text-gray-900">$119.98</span>
-                </div>
+                ))}
               </div>
 
               {/* Totals */}
@@ -152,9 +173,10 @@ export function Checkout() {
 
               {/* Desktop Submit */}
               <Button
+                type="submit"
+                form="checkout-form"
                 size="lg"
                 className="w-full mt-4 hidden lg:flex text-base h-12"
-                onClick={handleSubmit}
               >
                 Place Order
               </Button>
