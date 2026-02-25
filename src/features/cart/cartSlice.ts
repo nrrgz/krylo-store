@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { CartItem, Product } from '../../types';
+import type { CartItem } from '../../types';
 
 export interface CartState {
   items: CartItem[];
@@ -16,29 +16,17 @@ export const cartSlice = createSlice({
   reducers: {
     addItem: (
       state,
-      action: PayloadAction<{ product: Product; selectedColor: string; quantity: number }>
+      action: PayloadAction<CartItem>
     ) => {
-      const { product, selectedColor, quantity } = action.payload;
+      const item = action.payload;
       const existingItemIndex = state.items.findIndex(
-        (item) => item.productId === product.id && item.selectedColor.name === selectedColor
+        (i) => i.productId === item.productId && i.selectedColor.name === item.selectedColor.name
       );
 
-      const colorObj = product.colors.find((c) => c.name === selectedColor) || product.colors[0];
-      const stock = product.stockByColor[selectedColor] ?? 99;
-
       if (existingItemIndex >= 0) {
-        const currentItem = state.items[existingItemIndex];
-        currentItem.quantity = Math.min(currentItem.quantity + quantity, stock);
+        state.items[existingItemIndex].quantity += item.quantity;
       } else {
-        const q = Math.max(1, Math.min(quantity, stock));
-        state.items.push({
-          productId: product.id,
-          name: product.name,
-          price: product.price,
-          image: product.images[0] || '',
-          selectedColor: colorObj,
-          quantity: q,
-        });
+        state.items.push(item);
       }
     },
     removeItem: (

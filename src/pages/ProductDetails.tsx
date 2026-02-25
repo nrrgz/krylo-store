@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
 import { useAppDispatch } from '../app/hooks';
@@ -13,12 +13,12 @@ import { getProductById, getProducts } from '../lib/api/catalogApi';
 
 export function ProductDetails() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedColorState, setSelectedColorState] = useState<string | null>(null);
   const [quantity, setQuantity] = useState(1);
+  const [addedSuccess, setAddedSuccess] = useState(false);
 
   // Fetch product
   const { data: product, isLoading, isError } = useQuery({
@@ -29,8 +29,8 @@ export function ProductDetails() {
 
   // Fetch related products
   const { data: relatedData } = useQuery({
-    queryKey: ['products', { category: product?.category }],
-    queryFn: () => getProducts({ category: product?.category, page: 1, pageSize: 5 }),
+    queryKey: ['products', product?.category],
+    queryFn: () => getProducts({ category: product?.category, page: 1, pageSize: 8 }),
     enabled: !!product?.category,
   });
 
@@ -102,13 +102,21 @@ export function ProductDetails() {
   const handleAddToCart = () => {
     if (!product || isOutOfStock) return;
 
+    const resolvedHex = product.colors.find(c => c.name === selectedColor)?.hex || "";
+
     dispatch(addItem({
-      product,
-      selectedColor,
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.images[0] || "",
+      selectedColor: { name: selectedColor, hex: resolvedHex },
       quantity
     }));
 
-    navigate('/cart');
+    setAddedSuccess(true);
+    setTimeout(() => {
+      setAddedSuccess(false);
+    }, 2000);
   };
 
   return (
@@ -203,7 +211,8 @@ export function ProductDetails() {
                       key={color.name}
                       onClick={() => {
                         setSelectedColorState(color.name);
-                        setQuantity(1); // reset quantity on color change
+                        const newStock = product.stockByColor[color.name] || 0;
+                        setQuantity((prev) => Math.max(1, Math.min(prev, newStock === 0 ? 1 : newStock)));
                       }}
                       className={`relative w-10 h-10 rounded-full flex items-center justify-center transition-all ${isSelected ? 'ring-2 ring-[var(--primary)] ring-offset-2 ring-offset-[var(--bg)]' : 'ring-1 ring-[var(--border)] hover:ring-[var(--muted)]'
                         } ${isColorOutOfStock ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -249,11 +258,11 @@ export function ProductDetails() {
 
             <Button
               size="lg"
-              className="flex-grow text-base h-12"
+              className={`flex-grow text-base h-12 transition-all ${addedSuccess ? 'bg-green-600 hover:bg-green-700' : ''}`}
               onClick={handleAddToCart}
               disabled={isOutOfStock}
             >
-              {isOutOfStock ? 'Out of Stock' : 'Add to Cart — $' + (product.price * quantity).toFixed(2)}
+              {isOutOfStock ? 'Out of Stock' : addedSuccess ? 'Added to cart' : 'Add to Cart — $' + (product.price * quantity).toFixed(2)}
             </Button>
           </div>
 
