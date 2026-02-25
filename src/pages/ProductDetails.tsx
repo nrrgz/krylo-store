@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+
+import { useAppDispatch } from '../app/hooks';
+import { addItem } from '../features/cart/cartSlice';
 
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
@@ -10,6 +13,8 @@ import { getProductById, getProducts } from '../lib/api/catalogApi';
 
 export function ProductDetails() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [selectedColorState, setSelectedColorState] = useState<string | null>(null);
@@ -95,8 +100,15 @@ export function ProductDetails() {
   };
 
   const handleAddToCart = () => {
-    console.log(`Adding ${quantity} of ${selectedColor} to cart (Product: ${product.name})`);
-    // Placeholder handler
+    if (!product || isOutOfStock) return;
+
+    dispatch(addItem({
+      product,
+      selectedColor,
+      quantity
+    }));
+
+    navigate('/cart');
   };
 
   return (
