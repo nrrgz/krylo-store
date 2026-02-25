@@ -1,9 +1,23 @@
 import { useNavigate, Navigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectCartItems, selectCartSubtotal, clearCart } from '../features/cart/cartSlice';
+
+const checkoutSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  fullName: z.string().min(1, "Full name is required"),
+  phone: z.string().min(7, "Phone number must be at least 7 characters"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  postalCode: z.string().min(3, "Postal code must be at least 3 characters"),
+});
+
+type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export function Checkout() {
   const navigate = useNavigate();
@@ -19,17 +33,23 @@ export function Checkout() {
   const shipping = 0.00;
   const total = subtotal + tax + shipping;
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors }
+  } = useForm<CheckoutFormValues>({
+    resolver: zodResolver(checkoutSchema),
+  });
+
+  const onSubmit = (data: CheckoutFormValues) => {
     const orderId = `ORD-${Date.now()}`;
     const order = {
       orderId,
       createdAt: new Date().toISOString(),
       customer: {
-        name: formData.get('fullName') as string,
-        email: formData.get('email') as string,
-        address: `${formData.get('address')}, ${formData.get('city')} ${formData.get('postalCode')}`,
+        name: data.fullName,
+        email: data.email,
+        address: `${data.address}, ${data.city} ${data.postalCode}`,
       },
       items,
       totals: {
@@ -52,7 +72,7 @@ export function Checkout() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Checkout Form */}
         <div className="lg:col-span-7 xl:col-span-8">
-          <form id="checkout-form" onSubmit={handleSubmit} className="flex flex-col gap-8">
+          <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
 
             {/* Contact Information */}
             <section>
@@ -64,19 +84,22 @@ export function Checkout() {
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                     Email address
                   </label>
-                  <Input name="email" type="email" id="email" required placeholder="you@example.com" />
+                  <Input type="email" id="email" placeholder="you@example.com" {...register('email')} />
+                  {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
                 </div>
                 <div>
                   <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-1">
                     Full name
                   </label>
-                  <Input name="fullName" type="text" id="fullName" required placeholder="John Doe" />
+                  <Input type="text" id="fullName" placeholder="John Doe" {...register('fullName')} />
+                  {errors.fullName && <p className="text-red-500 text-xs mt-1">{errors.fullName.message}</p>}
                 </div>
                 <div>
                   <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1">
                     Phone number
                   </label>
-                  <Input name="phone" type="tel" id="phone" required placeholder="(555) 123-4567" />
+                  <Input type="tel" id="phone" placeholder="(555) 123-4567" {...register('phone')} />
+                  {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone.message}</p>}
                 </div>
               </div>
             </section>
@@ -91,19 +114,22 @@ export function Checkout() {
                   <label htmlFor="address" className="block text-sm font-medium text-gray-700 mb-1">
                     Street address
                   </label>
-                  <Input name="address" type="text" id="address" required placeholder="123 Main St" />
+                  <Input type="text" id="address" placeholder="123 Main St" {...register('address')} />
+                  {errors.address && <p className="text-red-500 text-xs mt-1">{errors.address.message}</p>}
                 </div>
                 <div>
                   <label htmlFor="city" className="block text-sm font-medium text-gray-700 mb-1">
                     City
                   </label>
-                  <Input name="city" type="text" id="city" required placeholder="San Francisco" />
+                  <Input type="text" id="city" placeholder="San Francisco" {...register('city')} />
+                  {errors.city && <p className="text-red-500 text-xs mt-1">{errors.city.message}</p>}
                 </div>
                 <div>
                   <label htmlFor="postalCode" className="block text-sm font-medium text-gray-700 mb-1">
                     Postal code
                   </label>
-                  <Input name="postalCode" type="text" id="postalCode" required placeholder="94105" />
+                  <Input type="text" id="postalCode" placeholder="94105" {...register('postalCode')} />
+                  {errors.postalCode && <p className="text-red-500 text-xs mt-1">{errors.postalCode.message}</p>}
                 </div>
               </div>
             </section>

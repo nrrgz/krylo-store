@@ -3,6 +3,7 @@ import { Select } from '../../../components/ui/Select';
 import { Button } from '../../../components/ui/Button';
 
 import type { Category } from '../../../types';
+import type { ProductSort } from '../../../lib/catalogUtils';
 
 export interface FiltersBarProps {
   categories: Category[];
@@ -14,8 +15,8 @@ export interface FiltersBarProps {
   onMinPriceChange: (value: string) => void;
   maxPrice: string;
   onMaxPriceChange: (value: string) => void;
-  sort: string;
-  onSortChange: (value: string) => void;
+  sort: ProductSort;
+  onSortChange: (value: ProductSort) => void;
   inStock: boolean;
   onInStockChange: (value: boolean) => void;
   onClear: () => void;
@@ -93,7 +94,7 @@ export function FiltersBar({
         <div>
           <Select
             value={sort}
-            onChange={(e) => onSortChange(e.target.value)}
+            onChange={(e) => onSortChange(e.target.value as ProductSort)}
           >
             <option value="featured">Featured</option>
             <option value="price_asc">Price: Low to High</option>

@@ -3,14 +3,15 @@ import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectCartItems, selectCartSubtotal, updateQty, removeItem, clearCart } from '../features/cart/cartSlice';
+import { products } from '../data/products';
 
 export function Cart() {
   const dispatch = useAppDispatch();
   const items = useAppSelector(selectCartItems);
   const subtotal = useAppSelector(selectCartSubtotal);
 
-  const handleUpdateQuantity = (productId: string, colorName: string, currentQty: number, delta: number) => {
-    dispatch(updateQty({ productId, selectedColor: colorName, quantity: currentQty + delta }));
+  const handleUpdateQuantity = (productId: string, colorName: string, currentQty: number, delta: number, maxStock: number) => {
+    dispatch(updateQty({ productId, selectedColor: colorName, quantity: currentQty + delta, maxStock }));
   };
 
   const handleRemoveItem = (productId: string, colorName: string) => {
@@ -53,71 +54,80 @@ export function Cart() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         {/* Cart Items List */}
         <div className="lg:col-span-8 flex flex-col gap-6">
-          {items.map((item) => (
-            <div
-              key={`${item.productId}-${item.selectedColor.name}`}
-              className="flex flex-col sm:flex-row gap-6 p-4 border border-[var(--border)] rounded-xl bg-[var(--surface)] shadow-sm"
-            >
-              {/* Product Image Placeholder */}
-              <div className="w-full sm:w-32 h-32 bg-[var(--surface-2)] rounded-lg flex-shrink-0 flex items-center justify-center text-xs text-gray-400 font-medium overflow-hidden">
-                {item.image ? (
-                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                ) : (
-                  'Image'
-                )}
-              </div>
+          {items.map((item) => {
+            const productInfo = products.find(p => p.id === item.productId);
+            const maxStock = productInfo?.stockByColor[item.selectedColor.name] || 0;
+            const isOutOfStock = maxStock === 0;
 
-              {/* Product Details & Controls */}
-              <div className="flex-1 flex flex-col justify-between">
-                <div className="flex justify-between items-start gap-4">
-                  <div>
-                    <Link to={`/products/${item.productId}`} className="font-bold text-gray-900 hover:underline text-lg leading-tight block mb-1">
-                      {item.name}
-                    </Link>
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <span
-                        className="w-3 h-3 rounded-full border border-[var(--border)]"
-                        style={{ backgroundColor: item.selectedColor.hex }}
-                      />
-                      {item.selectedColor.name}
-                    </div>
-                  </div>
-                  <div className="font-bold text-gray-900 text-lg">
-                    ${(item.price * item.quantity).toFixed(2)}
-                  </div>
+            return (
+              <div
+                key={`${item.productId}-${item.selectedColor.name}`}
+                className="flex flex-col sm:flex-row gap-6 p-4 border border-[var(--border)] rounded-xl bg-[var(--surface)] shadow-sm"
+              >
+                {/* Product Image Placeholder */}
+                <div className="w-full sm:w-32 h-32 bg-[var(--surface-2)] rounded-lg flex-shrink-0 flex items-center justify-center text-xs text-gray-400 font-medium overflow-hidden">
+                  {item.image ? (
+                    <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                  ) : (
+                    'Image'
+                  )}
                 </div>
 
-                <div className="flex items-center justify-between mt-4 sm:mt-0">
-                  <div className="flex items-center border border-[var(--border)] rounded-md bg-[var(--surface)]">
-                    <button
-                      onClick={() => handleUpdateQuantity(item.productId, item.selectedColor.name, item.quantity, -1)}
-                      disabled={item.quantity <= 1}
-                      className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[var(--primary)] transition-colors disabled:opacity-50"
-                    >
-                      &minus;
-                    </button>
-                    <div className="w-10 h-8 flex items-center justify-center font-semibold text-gray-900 text-sm">
-                      {item.quantity}
+                {/* Product Details & Controls */}
+                <div className="flex-1 flex flex-col justify-between">
+                  <div className="flex justify-between items-start gap-4">
+                    <div>
+                      <Link to={`/products/${item.productId}`} className="font-bold text-gray-900 hover:underline text-lg leading-tight block mb-1">
+                        {item.name}
+                      </Link>
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <span
+                          className="w-3 h-3 rounded-full border border-[var(--border)]"
+                          style={{ backgroundColor: item.selectedColor.hex }}
+                        />
+                        {item.selectedColor.name}
+                      </div>
                     </div>
-                    <button
-                      onClick={() => handleUpdateQuantity(item.productId, item.selectedColor.name, item.quantity, 1)}
-                      disabled={item.quantity >= 99}
-                      className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[var(--primary)] transition-colors disabled:opacity-50"
-                    >
-                      &#43;
-                    </button>
+                    <div className="font-bold text-gray-900 text-lg">
+                      ${(item.price * item.quantity).toFixed(2)}
+                    </div>
                   </div>
 
-                  <button
-                    onClick={() => handleRemoveItem(item.productId, item.selectedColor.name)}
-                    className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline transition-colors"
-                  >
-                    Remove
-                  </button>
+                  <div className="flex items-center justify-between mt-4 sm:mt-0">
+                    <div className="flex items-center gap-4">
+                      <div className="flex items-center border border-[var(--border)] rounded-md bg-[var(--surface)]">
+                        <button
+                          onClick={() => handleUpdateQuantity(item.productId, item.selectedColor.name, item.quantity, -1, maxStock)}
+                          disabled={item.quantity <= 1 || isOutOfStock}
+                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[var(--primary)] transition-colors disabled:opacity-50"
+                        >
+                          &minus;
+                        </button>
+                        <div className="w-10 h-8 flex items-center justify-center font-semibold text-gray-900 text-sm">
+                          {item.quantity}
+                        </div>
+                        <button
+                          onClick={() => handleUpdateQuantity(item.productId, item.selectedColor.name, item.quantity, 1, maxStock)}
+                          disabled={item.quantity >= maxStock || isOutOfStock}
+                          className="w-8 h-8 flex items-center justify-center text-gray-500 hover:text-[var(--primary)] transition-colors disabled:opacity-50"
+                        >
+                          &#43;
+                        </button>
+                      </div>
+                      {isOutOfStock && <span className="text-red-500 text-sm font-semibold">Out of stock</span>}
+                    </div>
+
+                    <button
+                      onClick={() => handleRemoveItem(item.productId, item.selectedColor.name)}
+                      className="text-sm font-medium text-red-600 hover:text-red-700 hover:underline transition-colors"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Order Summary */}

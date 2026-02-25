@@ -4,7 +4,7 @@ import { getCategories, getProducts } from '../lib/api/catalogApi';
 import { ProductGrid } from '../features/catalog/components/ProductGrid';
 import { FiltersBar } from '../features/catalog/components/FiltersBar';
 import { Pagination } from '../features/catalog/components/Pagination';
-import type { ProductQueryParams } from '../lib/catalogUtils';
+import { isValidSort, type ProductSort, type ProductQueryParams } from '../lib/catalogUtils';
 
 export function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -14,7 +14,8 @@ export function Catalog() {
   const category = searchParams.get('category') || '';
   const minPrice = searchParams.get('minPrice') || '';
   const maxPrice = searchParams.get('maxPrice') || '';
-  const sort = searchParams.get('sort') || 'featured';
+  const sortParam = searchParams.get('sort');
+  const sort: ProductSort = isValidSort(sortParam) ? sortParam : 'featured';
   const inStock = searchParams.get('inStock') === 'true';
   const page = parseInt(searchParams.get('page') || '1', 10);
   const pageSize = 12;
@@ -25,7 +26,7 @@ export function Catalog() {
     category: category || undefined,
     minPrice: minPrice ? Number(minPrice) : undefined,
     maxPrice: maxPrice ? Number(maxPrice) : undefined,
-    sort: sort as any,
+    sort,
     inStockOnly: inStock,
     page,
     pageSize,
