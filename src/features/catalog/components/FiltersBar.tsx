@@ -2,7 +2,10 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Button } from '../../../components/ui/Button';
 
+import type { Category } from '../../../types';
+
 export interface FiltersBarProps {
+  categories: Category[];
   searchTerm: string;
   onSearchChange: (value: string) => void;
   category: string;
@@ -19,6 +22,7 @@ export interface FiltersBarProps {
 }
 
 export function FiltersBar({
+  categories,
   searchTerm,
   onSearchChange,
   category,
@@ -59,11 +63,11 @@ export function FiltersBar({
             onChange={(e) => onCategoryChange(e.target.value)}
           >
             <option value="">All Categories</option>
-            <option value="keyboards">Keyboards</option>
-            <option value="mice">Mice</option>
-            <option value="audio">Audio</option>
-            <option value="charging">Charging</option>
-            <option value="desk">Desk</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.slug}>
+                {c.name}
+              </option>
+            ))}
           </Select>
         </div>
 

@@ -1,40 +1,63 @@
-import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { getCategories, getProducts } from '../lib/api/catalogApi';
 import { ProductGrid } from '../features/catalog/components/ProductGrid';
 import { FiltersBar } from '../features/catalog/components/FiltersBar';
 import { Pagination } from '../features/catalog/components/Pagination';
-
-const mockedProducts = [
-  { id: '1', name: 'Krylo Pro Mechanical Keyboard', brand: 'Krylo', price: 149.99, rating: 4.8, image: '', category: 'keyboards', badgeText: 'Best Seller' },
-  { id: '2', name: 'Krylo Precision Mouse', brand: 'Krylo', price: 89.99, rating: 4.5, image: '', category: 'mice' },
-  { id: '3', name: 'SoundScape ANC Headphones', brand: 'AudioTech', price: 249.99, rating: 4.9, image: '', category: 'audio', badgeText: 'New' },
-  { id: '4', name: 'Merino Wool Desk Mat', brand: 'Krylo', price: 59.99, rating: 4.7, image: '', category: 'desk' },
-  { id: '5', name: 'GaN 100W Charger', brand: 'PowerUP', price: 49.99, rating: 4.6, image: '', category: 'charging' },
-  { id: '6', name: 'Braided USB-C Cable 2m', brand: 'Krylo', price: 19.99, rating: 4.4, image: '', category: 'cables' },
-  { id: '7', name: 'Ergo Split Keyboard', brand: 'ErgoGear', price: 199.99, rating: 4.3, image: '', category: 'keyboards' },
-  { id: '8', name: 'Wireless Charging Stand', brand: 'PowerUP', price: 39.99, rating: 4.2, image: '', category: 'charging' },
-  { id: '9', name: 'Monitor Light Bar', brand: 'Lumina', price: 79.99, rating: 4.8, image: '', category: 'desk' },
-  { id: '10', name: 'Studio Microphone', brand: 'AudioTech', price: 129.99, rating: 4.6, image: '', category: 'audio' },
-  { id: '11', name: 'Magnetic Cable Organizer', brand: 'Krylo', price: 24.99, rating: 4.5, image: '', category: 'desk' },
-  { id: '12', name: 'Ultra-light Gaming Mouse', brand: 'Krylo', price: 99.99, rating: 4.7, image: '', category: 'mice' },
-];
+import type { ProductQueryParams } from '../lib/catalogUtils';
 
 export function Catalog() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [category, setCategory] = useState('');
-  const [minPrice, setMinPrice] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [sort, setSort] = useState('featured');
-  const [inStock, setInStock] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Read params
+  const searchTerm = searchParams.get('q') || '';
+  const category = searchParams.get('category') || '';
+  const minPrice = searchParams.get('minPrice') || '';
+  const maxPrice = searchParams.get('maxPrice') || '';
+  const sort = searchParams.get('sort') || 'featured';
+  const inStock = searchParams.get('inStock') === 'true';
+  const page = parseInt(searchParams.get('page') || '1', 10);
+  const pageSize = 12;
+
+  // Prepare typed query for backend
+  const queryParams: ProductQueryParams = {
+    query: searchTerm || undefined,
+    category: category || undefined,
+    minPrice: minPrice ? Number(minPrice) : undefined,
+    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    sort: sort as any,
+    inStockOnly: inStock,
+    page,
+    pageSize,
+  };
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: getCategories,
+  });
+
+  const { data: productsData, isLoading, isError } = useQuery({
+    queryKey: ['products', queryParams],
+    queryFn: () => getProducts(queryParams),
+  });
+
+  const updateParam = (key: string, value: string | boolean | number) => {
+    setSearchParams((prev) => {
+      const newParams = new URLSearchParams(prev);
+      if (value === '' || value === false || value === undefined) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, String(value));
+      }
+      if (key !== 'page') {
+        newParams.set('page', '1');
+      }
+      return newParams;
+    });
+  };
 
   const handleClear = () => {
-    setSearchTerm('');
-    setCategory('');
-    setMinPrice('');
-    setMaxPrice('');
-    setSort('featured');
-    setInStock(false);
-    setCurrentPage(1);
+    setSearchParams({});
   };
 
   return (
@@ -45,32 +68,61 @@ export function Catalog() {
       </div>
 
       <FiltersBar
+        categories={categories}
         searchTerm={searchTerm}
-        onSearchChange={setSearchTerm}
+        onSearchChange={(v) => updateParam('q', v)}
         category={category}
-        onCategoryChange={setCategory}
+        onCategoryChange={(v) => updateParam('category', v)}
         minPrice={minPrice}
-        onMinPriceChange={setMinPrice}
+        onMinPriceChange={(v) => updateParam('minPrice', v)}
         maxPrice={maxPrice}
-        onMaxPriceChange={setMaxPrice}
+        onMaxPriceChange={(v) => updateParam('maxPrice', v)}
         sort={sort}
-        onSortChange={setSort}
+        onSortChange={(v) => updateParam('sort', v)}
         inStock={inStock}
-        onInStockChange={setInStock}
+        onInStockChange={(v) => updateParam('inStock', v)}
         onClear={handleClear}
       />
 
-      <div className="mb-4 text-sm text-gray-500">
-        Showing {mockedProducts.length} products
-      </div>
+      {isError && (
+        <div className="py-24 text-center text-red-500">
+          <p className="text-lg font-medium">Failed to load products.</p>
+          <p className="text-sm mt-1">Please try again later.</p>
+        </div>
+      )}
 
-      <ProductGrid products={mockedProducts} />
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <div key={i} className="animate-pulse bg-[var(--surface-2)] rounded-xl h-96 w-full shadow-sm" />
+          ))}
+        </div>
+      ) : productsData ? (
+        <>
+          <div className="mb-4 text-sm text-gray-500">
+            Showing {productsData.items.length} of {productsData.total} products
+          </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={5}
-        onPageChange={setCurrentPage}
-      />
+          <ProductGrid products={productsData.items.map(p => ({
+            id: p.id,
+            name: p.name,
+            brand: p.brand,
+            price: p.price,
+            rating: p.rating,
+            image: p.images[0] || '',
+            category: p.category,
+            badgeText: p.isFeatured ? 'Featured' : undefined,
+          }))} />
+
+          {Math.ceil(productsData.total / pageSize) > 1 && (
+            <Pagination
+              currentPage={page}
+              totalPages={Math.ceil(productsData.total / pageSize)}
+              onPageChange={(p) => updateParam('page', p)}
+            />
+          )}
+        </>
+      ) : null}
     </div>
   );
 }
