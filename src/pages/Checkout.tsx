@@ -7,6 +7,7 @@ import { Input } from '../components/ui/Input';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectCartItems, selectCartSubtotal, clearCart } from '../features/cart/cartSlice';
+import { selectAuthUser } from '../features/auth/authSlice';
 
 const checkoutSchema = z.object({
   email: z.string().email("Invalid email address"),
@@ -24,6 +25,7 @@ export function Checkout() {
   const dispatch = useAppDispatch();
   const items = useAppSelector(selectCartItems);
   const subtotal = useAppSelector(selectCartSubtotal);
+  const user = useAppSelector(selectAuthUser);
 
   if (items.length === 0) {
     return <Navigate to="/cart" replace />;
@@ -61,6 +63,19 @@ export function Checkout() {
     };
 
     sessionStorage.setItem('krylo-last-order', JSON.stringify(order));
+
+    if (user) {
+      try {
+        const orderKey = `krylo-orders-${user.id}`;
+        const existing = localStorage.getItem(orderKey);
+        let userOrders = existing ? JSON.parse(existing) : [];
+        userOrders = [order, ...userOrders]; // latest first
+        localStorage.setItem(orderKey, JSON.stringify(userOrders));
+      } catch (e) {
+        console.error('Failed to save order to history', e);
+      }
+    }
+
     dispatch(clearCart());
     navigate(`/order/${orderId}`);
   };

@@ -7,6 +7,10 @@ import { Cart } from '../pages/Cart';
 import { Checkout } from '../pages/Checkout';
 import { OrderConfirmation } from '../pages/OrderConfirmation';
 import { NotFound } from '../pages/NotFound';
+import { Login } from '../pages/Login';
+import { Register } from '../pages/Register';
+import { Account } from '../pages/Account';
+import { ProtectedRoute } from './ProtectedRoute';
 
 export const router = createBrowserRouter([
   {
@@ -31,7 +35,27 @@ export const router = createBrowserRouter([
       },
       {
         path: 'checkout',
-        element: <Checkout />,
+        element: (
+          <ProtectedRoute>
+            <Checkout />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: 'login',
+        element: <Login />,
+      },
+      {
+        path: 'register',
+        element: <Register />,
+      },
+      {
+        path: 'account',
+        element: (
+          <ProtectedRoute>
+            <Account />
+          </ProtectedRoute>
+        ),
       },
       {
         path: 'order/:orderId',

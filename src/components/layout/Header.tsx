@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
 import { useAppSelector } from '../../app/hooks';
 import { selectCartItemCount } from '../../features/cart/cartSlice';
+import { selectAuthStatus } from '../../features/auth/authSlice';
 
 export function Header() {
   const cartCount = useAppSelector(selectCartItemCount);
+  const status = useAppSelector(selectAuthStatus);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-[var(--surface)]/90 backdrop-blur-md border-b border-[var(--border)]">
@@ -24,6 +26,16 @@ export function Header() {
               </span>
             )}
           </Link>
+
+          {status === 'signed_in' ? (
+            <Link to="/account" className="text-[var(--muted)] hover:text-[var(--primary)] font-medium transition-colors">
+              Account
+            </Link>
+          ) : (
+            <Link to="/login" className="text-[var(--muted)] hover:text-[var(--primary)] font-medium transition-colors">
+              Sign In
+            </Link>
+          )}
         </nav>
       </div>
     </header>

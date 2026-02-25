@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import cartReducer from '../features/cart/cartSlice';
+import authReducer from '../features/auth/authSlice';
 import type { CartState } from '../features/cart/cartSlice';
 
 const CART_STORAGE_KEY = 'krylo-cart-v1';
@@ -21,6 +22,7 @@ const preloadedState = loadCartState();
 export const store = configureStore({
   reducer: {
     cart: cartReducer,
+    auth: authReducer,
   },
   preloadedState,
 });
