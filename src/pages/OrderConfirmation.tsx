@@ -1,11 +1,15 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { useAppSelector } from '../app/hooks';
+import { selectAuthStatus } from '../features/auth/authSlice';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import type { Order } from '../types';
 
 export function OrderConfirmation() {
-  const { id } = useParams();
+  const { orderId } = useParams();
+  const navigate = useNavigate();
+  const authStatus = useAppSelector(selectAuthStatus);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -14,7 +18,7 @@ export function OrderConfirmation() {
       const stored = sessionStorage.getItem('krylo-last-order');
       if (stored) {
         const parsed = JSON.parse(stored) as Order;
-        if (parsed.orderId === id) {
+        if (parsed.orderId === orderId) {
           setOrder(parsed);
         }
       }
@@ -23,7 +27,17 @@ export function OrderConfirmation() {
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [orderId]);
+
+  useEffect(() => {
+    if (!order || authStatus !== 'signed_in') return;
+
+    const timer = setTimeout(() => {
+      navigate('/account', { replace: true });
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, [order, authStatus, navigate]);
 
   if (loading) {
     return (
@@ -82,6 +96,10 @@ export function OrderConfirmation() {
       <p className="text-lg text-gray-600 mb-2">
         We've received your order and are getting it ready to ship.
       </p>
+
+      {authStatus === 'signed_in' && (
+        <p className="text-sm text-gray-500 mb-4">Redirecting to your orders...</p>
+      )}
 
       <p className="text-gray-500 font-medium mb-10">
         Order ID: <span className="text-gray-900">{order.orderId}</span>

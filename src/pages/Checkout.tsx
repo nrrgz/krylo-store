@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,15 +11,19 @@ import { selectCartItems, selectCartSubtotal, clearCart } from '../features/cart
 import { selectAuthUser } from '../features/auth/authSlice';
 
 const checkoutSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  fullName: z.string().min(1, "Full name is required"),
-  phone: z.string().min(7, "Phone number must be at least 7 characters"),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
-  postalCode: z.string().min(3, "Postal code must be at least 3 characters"),
+  email: z.string().email('Invalid email address'),
+  fullName: z.string().min(1, 'Full name is required'),
+  phone: z.string().min(7, 'Phone number must be at least 7 characters'),
+  address: z.string().min(1, 'Address is required'),
+  city: z.string().min(1, 'City is required'),
+  postalCode: z.string().min(3, 'Postal code must be at least 3 characters'),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
+
+function createOrderId(): string {
+  return `ORD-${crypto.randomUUID()}`;
+}
 
 export function Checkout() {
   const navigate = useNavigate();
@@ -26,25 +31,28 @@ export function Checkout() {
   const items = useAppSelector(selectCartItems);
   const subtotal = useAppSelector(selectCartSubtotal);
   const user = useAppSelector(selectAuthUser);
-
-  if (items.length === 0) {
-    return <Navigate to="/cart" replace />;
-  }
-
-  const tax = subtotal * 0.10; // 10% tax
-  const shipping = 0.00;
-  const total = subtotal + tax + shipping;
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
 
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutSchema),
   });
 
+  if (items.length === 0 && !isPlacingOrder) {
+    return <Navigate to="/cart" replace />;
+  }
+
+  const tax = subtotal * 0.1;
+  const shipping = 0.0;
+  const total = subtotal + tax + shipping;
+
   const onSubmit = (data: CheckoutFormValues) => {
-    const orderId = `ORD-${Date.now()}`;
+    setIsPlacingOrder(true);
+
+    const orderId = createOrderId();
     const order = {
       orderId,
       createdAt: new Date().toISOString(),
@@ -69,7 +77,7 @@ export function Checkout() {
         const orderKey = `krylo-orders-${user.id}`;
         const existing = localStorage.getItem(orderKey);
         let userOrders = existing ? JSON.parse(existing) : [];
-        userOrders = [order, ...userOrders]; // latest first
+        userOrders = [order, ...userOrders];
         localStorage.setItem(orderKey, JSON.stringify(userOrders));
       } catch (e) {
         console.error('Failed to save order to history', e);
@@ -85,11 +93,8 @@ export function Checkout() {
       <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-8">Checkout</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
-        {/* Checkout Form */}
         <div className="lg:col-span-7 xl:col-span-8">
           <form id="checkout-form" onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-8">
-
-            {/* Contact Information */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
                 Contact Information
@@ -119,7 +124,6 @@ export function Checkout() {
               </div>
             </section>
 
-            {/* Shipping Address */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
                 Shipping Address
@@ -149,7 +153,6 @@ export function Checkout() {
               </div>
             </section>
 
-            {/* Payment Info placeholder */}
             <section>
               <h2 className="text-xl font-bold text-gray-900 mb-4 pb-2 border-b border-gray-100">
                 Payment
@@ -159,7 +162,6 @@ export function Checkout() {
               </div>
             </section>
 
-            {/* Mobile Submit (Hidden on large screens, shown below form) */}
             <div className="lg:hidden mt-4">
               <Button type="submit" size="lg" className="w-full text-base h-12">
                 Place Order
@@ -168,15 +170,12 @@ export function Checkout() {
           </form>
         </div>
 
-        {/* Order Summary Sidebar */}
         <div className="lg:col-span-5 xl:col-span-4">
           <Card className="sticky top-24 bg-gray-50/50 border-gray-100">
             <CardHeader>
               <CardTitle className="text-xl">Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
-
-              {/* Items list */}
               <div className="flex flex-col gap-3 pb-4 border-b border-gray-200">
                 {items.map((item) => (
                   <div key={`${item.productId}-${item.selectedColor.name}`} className="flex justify-between items-start text-sm">
@@ -194,7 +193,6 @@ export function Checkout() {
                 ))}
               </div>
 
-              {/* Totals */}
               <div className="flex justify-between items-center text-gray-600">
                 <span>Subtotal</span>
                 <span className="font-medium text-gray-900">${subtotal.toFixed(2)}</span>
@@ -212,16 +210,9 @@ export function Checkout() {
                 <span>${total.toFixed(2)}</span>
               </div>
 
-              {/* Desktop Submit */}
-              <Button
-                type="submit"
-                form="checkout-form"
-                size="lg"
-                className="w-full mt-4 hidden lg:flex text-base h-12"
-              >
+              <Button type="submit" form="checkout-form" size="lg" className="w-full mt-4 hidden lg:flex text-base h-12">
                 Place Order
               </Button>
-
             </CardContent>
           </Card>
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectAuthUser, logout } from '../features/auth/authSlice';
 import { Button } from '../components/ui/Button';
@@ -8,18 +8,15 @@ import type { Order } from '../types';
 export function Account() {
   const user = useAppSelector(selectAuthUser);
   const dispatch = useAppDispatch();
-  const [orders, setOrders] = useState<Order[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      try {
-        const storedOrders = localStorage.getItem(`krylo-orders-${user.id}`);
-        if (storedOrders) {
-          setOrders(JSON.parse(storedOrders));
-        }
-      } catch (e) {
-        console.error('Failed to load orders', e);
-      }
+  const orders = useMemo<Order[]>(() => {
+    if (!user) return [];
+    try {
+      const storedOrders = localStorage.getItem(`krylo-orders-${user.id}`);
+      return storedOrders ? (JSON.parse(storedOrders) as Order[]) : [];
+    } catch (e) {
+      console.error('Failed to load orders', e);
+      return [];
     }
   }, [user]);
 
