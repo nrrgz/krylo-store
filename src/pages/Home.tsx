@@ -14,35 +14,39 @@ const mockCategories = [
 
 const mockFeaturedProducts = [
   {
-    id: 'p1',
+    id: 'p_kb_1',
     name: 'Krylo Pro Mechanical Keyboard',
     brand: 'Krylo',
     price: 149.99,
     category: 'Keyboards',
+    image: '/images/products/keyboard-pro-1.png',
     isNew: true,
   },
   {
-    id: 'p2',
+    id: 'p_mi_1',
     name: 'Krylo Precision Mouse',
     brand: 'Krylo',
     price: 89.99,
     category: 'Mice',
+    image: '/images/products/mouse-precision-1.png',
     isNew: false,
   },
   {
-    id: 'p3',
+    id: 'p_au_1',
     name: 'Krylo SoundScape ANC',
     brand: 'Krylo',
     price: 249.99,
     category: 'Audio',
+    image: '/images/products/audio-anc-1.png',
     isNew: true,
   },
   {
-    id: 'p4',
+    id: 'p_dk_1',
     name: 'Krylo Merino Wool Desk Mat',
     brand: 'Krylo',
     price: 59.99,
     category: 'Desk',
+    image: '/images/products/desk-mat-wool-1.png',
     isNew: false,
   },
 ];
@@ -50,7 +54,6 @@ const mockFeaturedProducts = [
 export function Home() {
   return (
     <div className="flex flex-col gap-16 pb-16">
-      {/* Hero Section */}
       <section className="relative w-full bg-gray-50/50 py-24 sm:py-32">
         <div className="container-base flex flex-col items-center text-center">
           <Badge variant="outline" className="mb-6 py-1 px-3 text-sm tracking-wider uppercase text-gray-500 border-gray-300">
@@ -77,7 +80,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* Categories Section */}
       <section className="container-base">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-bold tracking-tight">Shop by Category</h2>
@@ -98,7 +100,6 @@ export function Home() {
         </div>
       </section>
 
-      {/* Featured Products Section */}
       <section id="featured" className="container-base">
         <div className="mb-8">
           <h2 className="text-3xl font-bold tracking-tight mb-2">Featured Products</h2>
@@ -108,9 +109,13 @@ export function Home() {
           {mockFeaturedProducts.map((product) => (
             <Link key={product.id} to={`/products/${product.id}`} className="group drop-shadow-sm hover:drop-shadow-lg transition-all">
               <Card className="h-full flex flex-col overflow-hidden border-transparent bg-gray-50 group-hover:bg-white group-hover:border-gray-200 transition-colors">
-                {/* Image Placeholder */}
-                <div className="aspect-square bg-gray-200 w-full relative flex items-center justify-center">
-                  <span className="text-gray-400 font-medium">Image</span>
+                <div className="aspect-square bg-gray-200 w-full relative overflow-hidden">
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                  />
                   {product.isNew && (
                     <Badge className="absolute top-3 left-3 bg-gray-900 text-white border-0 z-10">
                       New Arrival

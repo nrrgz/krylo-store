@@ -15,7 +15,7 @@ describe('cartSlice', () => {
     productId: 'p1',
     name: 'Test Keyboard',
     price: 100,
-    image: 'img.jpg',
+    image: 'img.png',
     selectedColor: { name: 'Black', hex: '#000' },
     quantity: 2,
   };
@@ -79,3 +79,4 @@ describe('cartSlice', () => {
     expect(state.items.length).toBe(0);
   });
 });
+
