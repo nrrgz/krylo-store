@@ -56,6 +56,7 @@ export function Checkout() {
     const order = {
       orderId,
       createdAt: new Date().toISOString(),
+      status: 'processing',
       customer: {
         name: data.fullName,
         email: data.email,
@@ -220,3 +221,4 @@ export function Checkout() {
     </div>
   );
 }
+

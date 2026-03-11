@@ -36,9 +36,12 @@ export interface CartItem {
   quantity: number;
 }
 
+export type OrderStatus = 'processing' | 'shipped' | 'delivered' | 'cancelled';
+
 export interface Order {
   orderId: string;
   createdAt: string;
+  status: OrderStatus;
   customer: {
     name: string;
     email: string;
@@ -52,3 +55,5 @@ export interface Order {
     total: number;
   };
 }
+
+

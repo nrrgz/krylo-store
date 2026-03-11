@@ -1,43 +1,77 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAppSelector } from '../app/hooks';
-import { selectAuthStatus } from '../features/auth/authSlice';
+import { selectAuthStatus, selectAuthUser } from '../features/auth/authSlice';
+import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
-import type { Order } from '../types';
+import type { Order, OrderStatus } from '../types';
+
+const normalizeStatus = (status: unknown): OrderStatus => {
+  if (status === 'shipped' || status === 'delivered' || status === 'cancelled') return status;
+  return 'processing';
+};
+
+const statusClasses: Record<OrderStatus, string> = {
+  processing: 'bg-amber-100 text-amber-800 border-amber-200',
+  shipped: 'bg-blue-100 text-blue-800 border-blue-200',
+  delivered: 'bg-green-100 text-green-800 border-green-200',
+  cancelled: 'bg-rose-100 text-rose-800 border-rose-200',
+};
 
 export function OrderConfirmation() {
   const { orderId } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const authStatus = useAppSelector(selectAuthStatus);
+  const user = useAppSelector(selectAuthUser);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fromCheckout = Boolean((location.state as { fromCheckout?: boolean } | null)?.fromCheckout);
+
   useEffect(() => {
     try {
-      const stored = sessionStorage.getItem('krylo-last-order');
-      if (stored) {
-        const parsed = JSON.parse(stored) as Order;
+      let foundOrder: Order | null = null;
+
+      const storedLastOrder = sessionStorage.getItem('krylo-last-order');
+      if (storedLastOrder) {
+        const parsed = JSON.parse(storedLastOrder) as Partial<Order>;
         if (parsed.orderId === orderId) {
-          setOrder(parsed);
+          foundOrder = { ...parsed, status: normalizeStatus(parsed.status) } as Order;
         }
       }
+
+      if (!foundOrder && user) {
+        const orderKey = `krylo-orders-${user.id}`;
+        const storedUserOrders = localStorage.getItem(orderKey);
+        if (storedUserOrders) {
+          const parsedOrders = JSON.parse(storedUserOrders) as Array<Partial<Order>>;
+          const matched = parsedOrders.find((candidate) => candidate.orderId === orderId);
+          if (matched) {
+            foundOrder = { ...matched, status: normalizeStatus(matched.status) } as Order;
+          }
+        }
+      }
+
+      setOrder(foundOrder);
     } catch (e) {
-      console.error('Failed to parse last order', e);
+      console.error('Failed to parse order data', e);
+      setOrder(null);
     } finally {
       setLoading(false);
     }
-  }, [orderId]);
+  }, [orderId, user]);
 
   useEffect(() => {
-    if (!order || authStatus !== 'signed_in') return;
+    if (!fromCheckout || !order || authStatus !== 'signed_in') return;
 
     const timer = setTimeout(() => {
       navigate('/account', { replace: true });
     }, 2500);
 
     return () => clearTimeout(timer);
-  }, [order, authStatus, navigate]);
+  }, [fromCheckout, order, authStatus, navigate]);
 
   if (loading) {
     return (
@@ -55,14 +89,12 @@ export function OrderConfirmation() {
   if (!order) {
     return (
       <div className="container-base py-24 flex flex-col items-center text-center">
-        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-4">
-          Order Not Found
-        </h1>
+        <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-4">Order Not Found</h1>
         <p className="text-gray-500 mb-8 max-w-md mx-auto">
           We couldn't locate details for this order, or it may have been from a previous session.
         </p>
-        <Link to="/products">
-          <Button size="lg">Continue Shopping</Button>
+        <Link to="/account">
+          <Button size="lg">Go to My Orders</Button>
         </Link>
       </div>
     );
@@ -70,8 +102,6 @@ export function OrderConfirmation() {
 
   return (
     <div className="container-base py-24 flex flex-col items-center text-center">
-
-      {/* Success Icon */}
       <div className="w-20 h-20 bg-gray-900 rounded-full flex items-center justify-center text-white mb-8 shadow-sm">
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -89,28 +119,23 @@ export function OrderConfirmation() {
         </svg>
       </div>
 
-      <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-4">
-        Thank you for your order!
-      </h1>
+      <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-4">Thank you for your order!</h1>
+      <p className="text-lg text-gray-600 mb-2">We've received your order and are getting it ready to ship.</p>
 
-      <p className="text-lg text-gray-600 mb-2">
-        We've received your order and are getting it ready to ship.
-      </p>
-
-      {authStatus === 'signed_in' && (
+      {fromCheckout && authStatus === 'signed_in' && (
         <p className="text-sm text-gray-500 mb-4">Redirecting to your orders...</p>
       )}
 
-      <p className="text-gray-500 font-medium mb-10">
-        Order ID: <span className="text-gray-900">{order.orderId}</span>
-      </p>
+      <div className="flex items-center gap-3 mb-10">
+        <p className="text-gray-500 font-medium">
+          Order ID: <span className="text-gray-900">{order.orderId}</span>
+        </p>
+        <Badge className={statusClasses[order.status]}>{order.status}</Badge>
+      </div>
 
-      {/* Summary Card */}
       <Card className="w-full max-w-lg mb-12 text-left bg-gray-50/50 border-gray-100 shadow-sm">
         <CardContent className="p-6 md:p-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-4">
-            Order Details
-          </h2>
+          <h2 className="text-xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-4">Order Details</h2>
 
           <div className="flex flex-col gap-4 mb-6">
             {order.items.map((item) => (
@@ -145,12 +170,14 @@ export function OrderConfirmation() {
         </CardContent>
       </Card>
 
-      <Link to="/products">
-        <Button size="lg" className="px-8 shadow-sm">
-          Continue Shopping
-        </Button>
-      </Link>
-
+      <div className="flex items-center gap-3">
+        <Link to="/account">
+          <Button size="lg" variant="secondary" className="px-8">My Orders</Button>
+        </Link>
+        <Link to="/products">
+          <Button size="lg" className="px-8 shadow-sm">Continue Shopping</Button>
+        </Link>
+      </div>
     </div>
   );
 }
