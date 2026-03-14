@@ -17,6 +17,7 @@ export function Register() {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email.');
       return;
@@ -29,8 +30,9 @@ export function Register() {
     try {
       dispatch(register({ email, name }));
       navigate(redirect, { replace: true });
-    } catch (e: any) {
-      setError(e.message || "Registration failed");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Registration failed';
+      setError(message);
     }
   };
 
@@ -49,7 +51,7 @@ export function Register() {
               type="text"
               placeholder="Your name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(event) => setName(event.target.value)}
               required
             />
           </div>
@@ -59,7 +61,7 @@ export function Register() {
               type="email"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
               required
             />
           </div>

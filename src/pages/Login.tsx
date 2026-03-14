@@ -16,15 +16,18 @@ export function Login() {
 
   const handleSignIn = (e: React.FormEvent) => {
     e.preventDefault();
+
     if (!email || !email.includes('@')) {
       setError('Please enter a valid email.');
       return;
     }
+
     try {
       dispatch(login({ email }));
       navigate(redirect, { replace: true });
-    } catch (e: any) {
-      setError(e.message || "Login failed");
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Login failed';
+      setError(message);
     }
   };
 
@@ -43,12 +46,14 @@ export function Login() {
               type="email"
               placeholder="you@example.com"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(event) => setEmail(event.target.value)}
             />
           </div>
           <div className="flex items-center gap-2 mt-1">
             <input type="checkbox" id="remember" className="rounded border-gray-300" />
-            <label htmlFor="remember" className="text-sm text-gray-600">Remember me</label>
+            <label htmlFor="remember" className="text-sm text-gray-600">
+              Remember me
+            </label>
           </div>
           <Button type="submit" size="lg" className="mt-4">
             Sign In
