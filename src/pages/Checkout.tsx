@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectCartItems, selectCartSubtotal, clearCart } from '../features/cart/cartSlice';
 import { selectAuthUser } from '../features/auth/authSlice';
+import { calculateTax } from '../lib/pricing';
 
 const checkoutSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -45,7 +46,7 @@ export function Checkout() {
     return <Navigate to="/cart" replace />;
   }
 
-  const tax = subtotal * 0.1;
+  const tax = calculateTax(subtotal);
   const shipping = 0.0;
   const total = subtotal + tax + shipping;
 

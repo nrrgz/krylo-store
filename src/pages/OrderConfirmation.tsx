@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useAppSelector } from '../app/hooks';
-import { selectAuthStatus, selectAuthUser } from '../features/auth/authSlice';
+import { selectAuthUser } from '../features/auth/authSlice';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
@@ -21,14 +21,9 @@ const statusClasses: Record<OrderStatus, string> = {
 
 export function OrderConfirmation() {
   const { orderId } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const authStatus = useAppSelector(selectAuthStatus);
   const user = useAppSelector(selectAuthUser);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const fromCheckout = Boolean((location.state as { fromCheckout?: boolean } | null)?.fromCheckout);
 
   useEffect(() => {
     try {
@@ -62,16 +57,6 @@ export function OrderConfirmation() {
       setLoading(false);
     }
   }, [orderId, user]);
-
-  useEffect(() => {
-    if (!fromCheckout || !order || authStatus !== 'signed_in') return;
-
-    const timer = setTimeout(() => {
-      navigate('/account', { replace: true });
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, [fromCheckout, order, authStatus, navigate]);
 
   if (loading) {
     return (
@@ -121,10 +106,6 @@ export function OrderConfirmation() {
 
       <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-4">Thank you for your order!</h1>
       <p className="text-lg text-gray-600 mb-2">We've received your order and are getting it ready to ship.</p>
-
-      {fromCheckout && authStatus === 'signed_in' && (
-        <p className="text-sm text-gray-500 mb-4">Redirecting to your orders...</p>
-      )}
 
       <div className="flex items-center gap-3 mb-10">
         <p className="text-gray-500 font-medium">

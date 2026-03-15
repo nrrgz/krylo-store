@@ -96,7 +96,8 @@ export function FiltersBar({
             value={sort}
             onChange={(e) => onSortChange(e.target.value as ProductSort)}
           >
-            <option value="featured">Featured</option>`r`n            <option value="newest">Newest</option>
+            <option value="featured">Featured</option>
+            <option value="newest">Newest</option>
             <option value="price_asc">Price: Low to High</option>
             <option value="price_desc">Price: High to Low</option>
             <option value="rating_desc">Highest Rated</option>
