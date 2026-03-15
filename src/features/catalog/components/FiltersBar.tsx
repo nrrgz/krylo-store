@@ -2,7 +2,11 @@ import { Input } from '../../../components/ui/Input';
 import { Select } from '../../../components/ui/Select';
 import { Button } from '../../../components/ui/Button';
 
+import type { Category } from '../../../types';
+import type { ProductSort } from '../../../lib/catalogUtils';
+
 export interface FiltersBarProps {
+  categories: Category[];
   searchTerm: string;
   onSearchChange: (value: string) => void;
   category: string;
@@ -11,14 +15,15 @@ export interface FiltersBarProps {
   onMinPriceChange: (value: string) => void;
   maxPrice: string;
   onMaxPriceChange: (value: string) => void;
-  sort: string;
-  onSortChange: (value: string) => void;
+  sort: ProductSort;
+  onSortChange: (value: ProductSort) => void;
   inStock: boolean;
   onInStockChange: (value: boolean) => void;
   onClear: () => void;
 }
 
 export function FiltersBar({
+  categories,
   searchTerm,
   onSearchChange,
   category,
@@ -59,11 +64,11 @@ export function FiltersBar({
             onChange={(e) => onCategoryChange(e.target.value)}
           >
             <option value="">All Categories</option>
-            <option value="keyboards">Keyboards</option>
-            <option value="mice">Mice</option>
-            <option value="audio">Audio</option>
-            <option value="charging">Charging</option>
-            <option value="desk">Desk</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.slug}>
+                {c.name}
+              </option>
+            ))}
           </Select>
         </div>
 
@@ -89,9 +94,9 @@ export function FiltersBar({
         <div>
           <Select
             value={sort}
-            onChange={(e) => onSortChange(e.target.value)}
+            onChange={(e) => onSortChange(e.target.value as ProductSort)}
           >
-            <option value="featured">Featured</option>
+            <option value="featured">Featured</option>`r`n            <option value="newest">Newest</option>
             <option value="price_asc">Price: Low to High</option>
             <option value="price_desc">Price: High to Low</option>
             <option value="rating_desc">Highest Rated</option>
@@ -114,3 +119,4 @@ export function FiltersBar({
     </div>
   );
 }
+

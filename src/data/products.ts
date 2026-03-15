@@ -11,7 +11,7 @@ export const products: Product[] = [
     price: 149.99,
     rating: 4.8,
     reviewCount: 342,
-    images: ['/images/products/keyboard-pro-1.jpg', '/images/products/keyboard-pro-2.jpg'],
+    images: ['/images/products/keyboard-pro-1.png', '/images/products/keyboard-pro-2.png'],
     colors: [
       { name: 'Obsidian Black', hex: '#111111' },
       { name: 'Arctic White', hex: '#F3F4F6' },
@@ -33,7 +33,7 @@ export const products: Product[] = [
     price: 109.99,
     rating: 4.5,
     reviewCount: 128,
-    images: ['/images/products/keyboard-lite-1.jpg'],
+    images: ['/images/products/keyboard-lite-1.png' , '/images/products/keyboard-lite-2.png'],
     colors: [
       { name: 'Graphite', hex: '#374151' },
       { name: 'Mint Green', hex: '#A7F3D0' },
@@ -55,7 +55,7 @@ export const products: Product[] = [
     price: 199.99,
     rating: 4.9,
     reviewCount: 56,
-    images: ['/images/products/keyboard-ergo-1.jpg'],
+    images: ['/images/products/keyboard-ergo-1.png'],
     colors: [
       { name: 'Matte Black', hex: '#222222' },
     ],
@@ -75,7 +75,7 @@ export const products: Product[] = [
     price: 89.99,
     rating: 4.3,
     reviewCount: 210,
-    images: ['/images/products/keyboard-aether-1.jpg'],
+    images: ['/images/products/keyboard-aether-1.png', '/images/products/keyboard-aether-2.png'],
     colors: [
       { name: 'Cyber Yellow', hex: '#FBBF24' },
       { name: 'Ghost White', hex: '#F9FAFB' },
@@ -97,7 +97,7 @@ export const products: Product[] = [
     price: 179.99,
     rating: 4.7,
     reviewCount: 89,
-    images: ['/images/products/keyboard-creator-1.jpg'],
+    images: ['/images/products/keyboard-creator-1.png'],
     colors: [
       { name: 'Space Gray', hex: '#4B5563' },
     ],
@@ -119,7 +119,7 @@ export const products: Product[] = [
     price: 89.99,
     rating: 4.6,
     reviewCount: 412,
-    images: ['/images/products/mouse-precision-1.jpg'],
+    images: ['/images/products/mouse-precision-1.png' , '/images/products/mouse-precision-2.png'],
     colors: [
       { name: 'Obsidian Black', hex: '#111111' },
       { name: 'Arctic White', hex: '#F3F4F6' },
@@ -141,7 +141,7 @@ export const products: Product[] = [
     price: 69.99,
     rating: 4.8,
     reviewCount: 220,
-    images: ['/images/products/mouse-aero-1.jpg'],
+    images: ['/images/products/mouse-aero-1.png' , '/images/products/mouse-aero-2.png'],
     colors: [
       { name: 'Neon Pink', hex: '#EC4899' },
       { name: 'Cyan Blue', hex: '#06B6D4' },
@@ -163,7 +163,7 @@ export const products: Product[] = [
     price: 99.99,
     rating: 4.4,
     reviewCount: 95,
-    images: ['/images/products/mouse-trackball-1.jpg'],
+    images: ['/images/products/mouse-trackball-1.png'],
     colors: [
       { name: 'Graphite', hex: '#374151' },
     ],
@@ -183,7 +183,7 @@ export const products: Product[] = [
     price: 39.99,
     rating: 4.2,
     reviewCount: 310,
-    images: ['/images/products/mouse-travel-1.jpg'],
+    images: ['/images/products/mouse-travel-1.png' , '/images/products/mouse-travel-2.png'],
     colors: [
       { name: 'Silver', hex: '#D1D5DB' },
       { name: 'Midnight Blue', hex: '#1E3A8A' },
@@ -205,7 +205,7 @@ export const products: Product[] = [
     price: 75.99,
     rating: 4.7,
     reviewCount: 160,
-    images: ['/images/products/mouse-vertical-1.jpg'],
+    images: ['/images/products/mouse-vertical-1.png'],
     colors: [
       { name: 'Matte Black', hex: '#222222' },
     ],
@@ -227,7 +227,7 @@ export const products: Product[] = [
     price: 249.99,
     rating: 4.9,
     reviewCount: 512,
-    images: ['/images/products/audio-anc-1.jpg'],
+    images: ['/images/products/audio-anc-1.png' , '/images/products/audio-anc-2.png'],
     colors: [
       { name: 'Obsidian Black', hex: '#111111' },
       { name: 'Sandstone', hex: '#D6D3D1' },
@@ -249,7 +249,7 @@ export const products: Product[] = [
     price: 149.99,
     rating: 4.6,
     reviewCount: 380,
-    images: ['/images/products/audio-buds-1.jpg'],
+    images: ['/images/products/audio-buds-1.png' , '/images/products/audio-buds-2.png'],
     colors: [
       { name: 'Gloss White', hex: '#FFFFFF' },
       { name: 'Midnight', hex: '#0F172A' },
@@ -271,7 +271,7 @@ export const products: Product[] = [
     price: 189.99,
     rating: 4.8,
     reviewCount: 145,
-    images: ['/images/products/audio-studio-1.jpg'],
+    images: ['/images/products/audio-studio-1.png'],
     colors: [
       { name: 'Classic Black', hex: '#18181B' },
     ],
@@ -291,7 +291,7 @@ export const products: Product[] = [
     price: 119.99,
     rating: 4.5,
     reviewCount: 215,
-    images: ['/images/products/audio-speakers-1.jpg'],
+    images: ['/images/products/audio-speakers-1.png' , '/images/products/audio-speakers-2.png'],
     colors: [
       { name: 'Walnut', hex: '#78350F' },
       { name: 'Oak', hex: '#B45309' },
@@ -313,7 +313,7 @@ export const products: Product[] = [
     price: 159.99,
     rating: 4.7,
     reviewCount: 188,
-    images: ['/images/products/audio-mic-1.jpg'],
+    images: ['/images/products/audio-mic-1.png'],
     colors: [
       { name: 'Matte Black', hex: '#222222' },
     ],
@@ -335,7 +335,7 @@ export const products: Product[] = [
     price: 69.99,
     rating: 4.8,
     reviewCount: 650,
-    images: ['/images/products/charging-gan-1.jpg'],
+    images: ['/images/products/charging-gan-1.png' , '/images/products/charging-gan-2.png'],
     colors: [
       { name: 'Space Gray', hex: '#4B5563' },
       { name: 'Arctic White', hex: '#F3F4F6' },
@@ -357,7 +357,7 @@ export const products: Product[] = [
     price: 89.99,
     rating: 4.5,
     reviewCount: 320,
-    images: ['/images/products/charging-pad-1.jpg'],
+    images: ['/images/products/charging-pad-1.png' , '/images/products/charging-pad-2.png'],
     colors: [
       { name: 'Silver', hex: '#D1D5DB' },
       { name: 'Black', hex: '#111111' },
@@ -379,7 +379,7 @@ export const products: Product[] = [
     price: 24.99,
     rating: 4.9,
     reviewCount: 890,
-    images: ['/images/products/cable-titan-1.jpg'],
+    images: ['/images/products/cable-titan-1.png' , '/images/products/cable-titan-2.png' , '/images/products/cable-titan-3.png'],
     colors: [
       { name: 'Charcoal', hex: '#374151' },
       { name: 'Crimson', hex: '#DC2626' },
@@ -403,7 +403,7 @@ export const products: Product[] = [
     price: 29.99,
     rating: 4.4,
     reviewCount: 145,
-    images: ['/images/products/cable-mag-1.jpg'],
+    images: ['/images/products/cable-mag-1.png'],
     colors: [
       { name: 'White', hex: '#FFFFFF' },
     ],
@@ -423,7 +423,7 @@ export const products: Product[] = [
     price: 45.99,
     rating: 4.7,
     reviewCount: 230,
-    images: ['/images/products/cable-coil-1.jpg'],
+    images: ['/images/products/cable-coil-1.png' , '/images/products/cable-coil-2.png' , '/images/products/cable-coil-3.png'],
     colors: [
       { name: 'Lazer Purple', hex: '#8B5CF6' },
       { name: 'Mint', hex: '#6EE7B7' },
@@ -449,7 +449,7 @@ export const products: Product[] = [
     price: 59.99,
     rating: 4.8,
     reviewCount: 420,
-    images: ['/images/products/desk-mat-wool-1.jpg'],
+    images: ['/images/products/desk-mat-wool-1.png' , '/images/products/desk-mat-wool-2.png' , '/images/products/desk-mat-wool-3.png'],
     colors: [
       { name: 'Light Gray', hex: '#D1D5DB' },
       { name: 'Charcoal', hex: '#374151' },
@@ -473,7 +473,7 @@ export const products: Product[] = [
     price: 79.99,
     rating: 4.6,
     reviewCount: 290,
-    images: ['/images/products/desk-stand-1.jpg'],
+    images: ['/images/products/desk-stand-1.png' , '/images/products/desk-stand-2.png'],
     colors: [
       { name: 'Silver', hex: '#E5E7EB' },
       { name: 'Space Gray', hex: '#4B5563' },
@@ -487,3 +487,4 @@ export const products: Product[] = [
     },
   },
 ];
+

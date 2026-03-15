@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '../../../components/ui/Card';
 import { Badge } from '../../../components/ui/Badge';
 import { Button } from '../../../components/ui/Button';
@@ -25,6 +26,8 @@ export function ProductCard({
   badgeText,
   onAddToCart,
 }: ProductCardProps) {
+  const [imageFailed, setImageFailed] = useState(false);
+
   return (
     <Card className="h-full flex flex-col overflow-hidden bg-white hover:border-gray-400 group transition-colors shadow-sm w-full max-w-[320px] mx-auto">
       <Link to={`/products/${id}`} className="flex flex-col flex-grow">
@@ -34,9 +37,20 @@ export function ProductCard({
               {badgeText}
             </Badge>
           )}
-          <div className="w-full h-full bg-gray-200 rounded-sm flex items-center justify-center text-gray-400 font-mono text-xs">
-            {image ? 'Image Placeholder' : 'No Image'}
-          </div>
+
+          {image && !imageFailed ? (
+            <img
+              src={image}
+              alt={name}
+              className="w-full h-full object-cover rounded-sm"
+              loading="lazy"
+              onError={() => setImageFailed(true)}
+            />
+          ) : (
+            <div className="w-full h-full bg-gray-200 rounded-sm flex items-center justify-center text-gray-400 font-mono text-xs">
+              Image unavailable
+            </div>
+          )}
         </div>
 
         <CardHeader className="flex-grow pb-2 p-5">
@@ -75,3 +89,4 @@ export function ProductCard({
     </Card>
   );
 }
+

@@ -1,5 +1,11 @@
 import type { Product } from '../types';
 
+export type ProductSort = "featured" | "newest" | "price_asc" | "price_desc" | "rating_desc";
+
+export const isValidSort = (value: string | null): value is ProductSort => {
+  return ["featured", "newest", "price_asc", "price_desc", "rating_desc"].includes(value as ProductSort);
+};
+
 export interface ProductQueryParams {
   query?: string;
   category?: string;
@@ -7,7 +13,7 @@ export interface ProductQueryParams {
   maxPrice?: number;
   minRating?: number;
   inStockOnly?: boolean;
-  sort?: "newest" | "price_asc" | "price_desc" | "rating_desc";
+  sort?: ProductSort;
   page: number;
   pageSize: number;
 }

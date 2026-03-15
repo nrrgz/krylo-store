@@ -1,73 +1,82 @@
-# React + TypeScript + Vite
+# Krylo Ecommerce (Frontend)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Krylo is a frontend ecommerce app built with React, TypeScript, Vite, Redux Toolkit, React Query, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- React 19 + TypeScript
+- Vite
+- React Router
+- Redux Toolkit + React Redux
+- TanStack Query
+- Tailwind CSS
+- React Hook Form + Zod
+- Vitest + Testing Library
 
-## React Compiler
+## Project Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- `src/app`: app setup (router, providers, store, hooks)
+- `src/components`: reusable UI and layout components
+- `src/features`: feature modules (auth, cart, catalog)
+- `src/pages`: route-level pages
+- `src/data`: static categories/products data
+- `src/lib`: utility and API simulation layer
+- `public/images`: product and category images
 
-## Expanding the ESLint configuration
+## Local Development
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+1. Install dependencies:
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+2. Start dev server:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm run dev
 ```
+
+3. Open:
+
+- `http://localhost:5173`
+
+## Scripts
+
+- `npm run dev`: start local dev server
+- `npm run build`: typecheck + production build
+- `npm run preview`: preview built app
+- `npm run lint`: run ESLint
+- `npm run test -- --run`: run tests once
+- `npm run test:ui`: Vitest UI mode
+- `npm run format`: format source files with Prettier
+
+## Image Conventions
+
+Product images are referenced from `src/data/products.ts` and served from:
+
+- `public/images/products/<file>.png`
+
+Category images are referenced from `src/data/categories.ts` and served from:
+
+- `public/images/categories/<file>.svg`
+
+## Current Auth Model
+
+- Frontend-only auth
+- User records + session stored in localStorage (`krylo-users-v1`, `krylo-auth-v1`)
+- This is for demo/prototype usage only (not production security)
+
+## Current Testing Coverage
+
+Included:
+
+- Cart reducer behavior
+- Auth storage service behavior
+- Catalog filtering/sorting/pagination utility behavior
+
+Still recommended next:
+
+- Integration tests for checkout -> order confirmation -> account history
+- Route protection and redirect tests
+- End-to-end tests for key shopping flow

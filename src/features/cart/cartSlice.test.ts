@@ -6,28 +6,17 @@ import cartReducer, {
   clearCart,
   selectCartItemCount,
   selectCartSubtotal,
-  type CartState
+  type CartState,
 } from './cartSlice';
-import type { Product } from '../../types';
 
 describe('cartSlice', () => {
-  const mockProduct: Product = {
-    id: 'p1',
+  const mockCartItem = {
+    productId: 'p1',
     name: 'Test Keyboard',
-    brand: 'Brand',
-    description: 'Desc',
-    category: 'keyboards',
     price: 100,
-    rating: 5,
-    reviewCount: 1,
-    images: ['img.jpg'],
-    colors: [{ name: 'Black', hex: '#000' }],
-    tags: [],
-    isFeatured: false,
-    createdAt: '2023-01-01',
-    stockByColor: {
-      'Black': 10,
-    },
+    image: 'img.png',
+    selectedColor: { name: 'Black', hex: '#000' },
+    quantity: 2,
   };
 
   let initialState: CartState;
@@ -37,7 +26,7 @@ describe('cartSlice', () => {
   });
 
   it('adds a new item correctly', () => {
-    const action = addItem({ product: mockProduct, selectedColor: 'Black', quantity: 2 });
+    const action = addItem(mockCartItem);
     const state = cartReducer(initialState, action);
 
     expect(state.items.length).toBe(1);
@@ -46,15 +35,32 @@ describe('cartSlice', () => {
   });
 
   it('increments quantity when adding same product/color', () => {
-    let state = cartReducer(initialState, addItem({ product: mockProduct, selectedColor: 'Black', quantity: 1 }));
-    state = cartReducer(state, addItem({ product: mockProduct, selectedColor: 'Black', quantity: 2 }));
+    let state = cartReducer(initialState, addItem({ ...mockCartItem, quantity: 1 }));
+    state = cartReducer(state, addItem({ ...mockCartItem, quantity: 2 }));
 
     expect(state.items.length).toBe(1);
     expect(state.items[0].quantity).toBe(3);
   });
 
+  it('clamps addItem quantity to real stock when product exists', () => {
+    const state = cartReducer(
+      initialState,
+      addItem({
+        productId: 'p_kb_1',
+        name: 'Krylo Pro Mechanical Keyboard',
+        price: 149.99,
+        image: '/images/products/keyboard-pro-1.png',
+        selectedColor: { name: 'Obsidian Black', hex: '#111111' },
+        quantity: 999,
+      }),
+    );
+
+    expect(state.items.length).toBe(1);
+    expect(state.items[0].quantity).toBe(45);
+  });
+
   it('removes an item correctly', () => {
-    let state = cartReducer(initialState, addItem({ product: mockProduct, selectedColor: 'Black', quantity: 2 }));
+    let state = cartReducer(initialState, addItem(mockCartItem));
     expect(state.items.length).toBe(1);
 
     state = cartReducer(state, removeItem({ productId: 'p1', selectedColor: 'Black' }));
@@ -62,19 +68,17 @@ describe('cartSlice', () => {
   });
 
   it('updateQty clamps between 1 and maxStock', () => {
-    let state = cartReducer(initialState, addItem({ product: mockProduct, selectedColor: 'Black', quantity: 2 }));
+    let state = cartReducer(initialState, addItem(mockCartItem));
 
-    // update below 1
     state = cartReducer(state, updateQty({ productId: 'p1', selectedColor: 'Black', quantity: 0, maxStock: 10 }));
     expect(state.items[0].quantity).toBe(1);
 
-    // update above maxStock
     state = cartReducer(state, updateQty({ productId: 'p1', selectedColor: 'Black', quantity: 15, maxStock: 10 }));
     expect(state.items[0].quantity).toBe(10);
   });
 
   it('calculates selectors correctly', () => {
-    const state = cartReducer(initialState, addItem({ product: mockProduct, selectedColor: 'Black', quantity: 3 }));
+    const state = cartReducer(initialState, addItem({ ...mockCartItem, quantity: 3 }));
 
     const rootState = { cart: state };
     expect(selectCartItemCount(rootState)).toBe(3);
@@ -82,7 +86,7 @@ describe('cartSlice', () => {
   });
 
   it('clears cart', () => {
-    let state = cartReducer(initialState, addItem({ product: mockProduct, selectedColor: 'Black', quantity: 3 }));
+    let state = cartReducer(initialState, addItem({ ...mockCartItem, quantity: 3 }));
     expect(state.items.length).toBe(1);
 
     state = cartReducer(state, clearCart());
