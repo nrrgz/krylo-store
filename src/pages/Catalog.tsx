@@ -6,10 +6,21 @@ import { FiltersBar } from '../features/catalog/components/FiltersBar';
 import { Pagination } from '../features/catalog/components/Pagination';
 import { isValidSort, type ProductSort, type ProductQueryParams } from '../lib/catalogUtils';
 
+const parseOptionalNumber = (rawValue: string | null): number | undefined => {
+  if (rawValue === null || rawValue.trim() === '') return undefined;
+  const parsed = Number(rawValue);
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const parsePositiveInt = (rawValue: string | null, fallback: number): number => {
+  if (!rawValue) return fallback;
+  const parsed = Number.parseInt(rawValue, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+};
+
 export function Catalog() {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Read params
   const searchTerm = searchParams.get('q') || '';
   const category = searchParams.get('category') || '';
   const minPrice = searchParams.get('minPrice') || '';
@@ -17,15 +28,14 @@ export function Catalog() {
   const sortParam = searchParams.get('sort');
   const sort: ProductSort = isValidSort(sortParam) ? sortParam : 'featured';
   const inStock = searchParams.get('inStock') === 'true';
-  const page = parseInt(searchParams.get('page') || '1', 10);
+  const page = parsePositiveInt(searchParams.get('page'), 1);
   const pageSize = 12;
 
-  // Prepare typed query for backend
   const queryParams: ProductQueryParams = {
     query: searchTerm || undefined,
     category: category || undefined,
-    minPrice: minPrice ? Number(minPrice) : undefined,
-    maxPrice: maxPrice ? Number(maxPrice) : undefined,
+    minPrice: parseOptionalNumber(minPrice),
+    maxPrice: parseOptionalNumber(maxPrice),
     sort,
     inStockOnly: inStock,
     page,
@@ -71,17 +81,17 @@ export function Catalog() {
       <FiltersBar
         categories={categories}
         searchTerm={searchTerm}
-        onSearchChange={(v) => updateParam('q', v)}
+        onSearchChange={(value) => updateParam('q', value)}
         category={category}
-        onCategoryChange={(v) => updateParam('category', v)}
+        onCategoryChange={(value) => updateParam('category', value)}
         minPrice={minPrice}
-        onMinPriceChange={(v) => updateParam('minPrice', v)}
+        onMinPriceChange={(value) => updateParam('minPrice', value)}
         maxPrice={maxPrice}
-        onMaxPriceChange={(v) => updateParam('maxPrice', v)}
+        onMaxPriceChange={(value) => updateParam('maxPrice', value)}
         sort={sort}
-        onSortChange={(v) => updateParam('sort', v)}
+        onSortChange={(value) => updateParam('sort', value)}
         inStock={inStock}
-        onInStockChange={(v) => updateParam('inStock', v)}
+        onInStockChange={(value) => updateParam('inStock', value)}
         onClear={handleClear}
       />
 
@@ -104,22 +114,24 @@ export function Catalog() {
             Showing {productsData.items.length} of {productsData.total} products
           </div>
 
-          <ProductGrid products={productsData.items.map(p => ({
-            id: p.id,
-            name: p.name,
-            brand: p.brand,
-            price: p.price,
-            rating: p.rating,
-            image: p.images[0] || '',
-            category: p.category,
-            badgeText: p.isFeatured ? 'Featured' : undefined,
-          }))} />
+          <ProductGrid
+            products={productsData.items.map((product) => ({
+              id: product.id,
+              name: product.name,
+              brand: product.brand,
+              price: product.price,
+              rating: product.rating,
+              image: product.images[0] || '',
+              category: product.category,
+              badgeText: product.isFeatured ? 'Featured' : undefined,
+            }))}
+          />
 
           {Math.ceil(productsData.total / pageSize) > 1 && (
             <Pagination
               currentPage={page}
               totalPages={Math.ceil(productsData.total / pageSize)}
-              onPageChange={(p) => updateParam('page', p)}
+              onPageChange={(nextPage) => updateParam('page', nextPage)}
             />
           )}
         </>

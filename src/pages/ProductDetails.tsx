@@ -128,7 +128,7 @@ export function ProductDetails() {
                 className="w-full h-full object-cover rounded-xl"
               />
             ) : (
-              'Main Image Placeholder'
+              'Image unavailable'
             )}
           </div>
 
@@ -278,3 +278,4 @@ export function ProductDetails() {
     </div>
   );
 }
+

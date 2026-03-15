@@ -48,7 +48,7 @@ export function ProductCard({
             />
           ) : (
             <div className="w-full h-full bg-gray-200 rounded-sm flex items-center justify-center text-gray-400 font-mono text-xs">
-              No Image
+              Image unavailable
             </div>
           )}
         </div>
@@ -89,3 +89,4 @@ export function ProductCard({
     </Card>
   );
 }
+
