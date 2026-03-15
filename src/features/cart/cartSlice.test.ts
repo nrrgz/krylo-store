@@ -6,9 +6,8 @@ import cartReducer, {
   clearCart,
   selectCartItemCount,
   selectCartSubtotal,
-  type CartState
+  type CartState,
 } from './cartSlice';
-
 
 describe('cartSlice', () => {
   const mockCartItem = {
@@ -43,6 +42,23 @@ describe('cartSlice', () => {
     expect(state.items[0].quantity).toBe(3);
   });
 
+  it('clamps addItem quantity to real stock when product exists', () => {
+    const state = cartReducer(
+      initialState,
+      addItem({
+        productId: 'p_kb_1',
+        name: 'Krylo Pro Mechanical Keyboard',
+        price: 149.99,
+        image: '/images/products/keyboard-pro-1.png',
+        selectedColor: { name: 'Obsidian Black', hex: '#111111' },
+        quantity: 999,
+      }),
+    );
+
+    expect(state.items.length).toBe(1);
+    expect(state.items[0].quantity).toBe(45);
+  });
+
   it('removes an item correctly', () => {
     let state = cartReducer(initialState, addItem(mockCartItem));
     expect(state.items.length).toBe(1);
@@ -54,11 +70,9 @@ describe('cartSlice', () => {
   it('updateQty clamps between 1 and maxStock', () => {
     let state = cartReducer(initialState, addItem(mockCartItem));
 
-    // update below 1
     state = cartReducer(state, updateQty({ productId: 'p1', selectedColor: 'Black', quantity: 0, maxStock: 10 }));
     expect(state.items[0].quantity).toBe(1);
 
-    // update above maxStock
     state = cartReducer(state, updateQty({ productId: 'p1', selectedColor: 'Black', quantity: 15, maxStock: 10 }));
     expect(state.items[0].quantity).toBe(10);
   });
@@ -79,4 +93,3 @@ describe('cartSlice', () => {
     expect(state.items.length).toBe(0);
   });
 });
-

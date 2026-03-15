@@ -1,6 +1,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
 import type { CartItem } from '../../types';
+import { products } from '../../data/products';
 
 export interface CartState {
   items: CartItem[];
@@ -10,44 +11,56 @@ const initialState: CartState = {
   items: [],
 };
 
+const resolveMaxStock = (productId: string, selectedColor: string): number | undefined => {
+  const product = products.find((item) => item.id === productId);
+  if (!product) return undefined;
+  return product.stockByColor[selectedColor] ?? 0;
+};
+
+const clampQuantity = (quantity: number, maxStock?: number): number => {
+  const upperLimit = maxStock !== undefined ? maxStock : 99;
+  return Math.max(1, Math.min(quantity, upperLimit));
+};
+
 export const cartSlice = createSlice({
   name: 'cart',
   initialState,
   reducers: {
-    addItem: (
-      state,
-      action: PayloadAction<CartItem>
-    ) => {
+    addItem: (state, action: PayloadAction<CartItem>) => {
       const item = action.payload;
+      const maxStock = resolveMaxStock(item.productId, item.selectedColor.name);
+
+      if (maxStock === 0) {
+        return;
+      }
+
       const existingItemIndex = state.items.findIndex(
-        (i) => i.productId === item.productId && i.selectedColor.name === item.selectedColor.name
+        (i) => i.productId === item.productId && i.selectedColor.name === item.selectedColor.name,
       );
 
       if (existingItemIndex >= 0) {
-        state.items[existingItemIndex].quantity += item.quantity;
+        const existingQty = state.items[existingItemIndex].quantity;
+        state.items[existingItemIndex].quantity = clampQuantity(existingQty + item.quantity, maxStock);
       } else {
-        state.items.push(item);
+        const safeQuantity = clampQuantity(item.quantity, maxStock);
+        state.items.push({ ...item, quantity: safeQuantity });
       }
     },
-    removeItem: (
-      state,
-      action: PayloadAction<{ productId: string; selectedColor: string }>
-    ) => {
+    removeItem: (state, action: PayloadAction<{ productId: string; selectedColor: string }>) => {
       const { productId, selectedColor } = action.payload;
       state.items = state.items.filter(
-        (item) => !(item.productId === productId && item.selectedColor.name === selectedColor)
+        (item) => !(item.productId === productId && item.selectedColor.name === selectedColor),
       );
     },
     updateQty: (
       state,
-      action: PayloadAction<{ productId: string; selectedColor: string; quantity: number; maxStock?: number }>
+      action: PayloadAction<{ productId: string; selectedColor: string; quantity: number; maxStock?: number }>,
     ) => {
       const { productId, selectedColor, quantity, maxStock } = action.payload;
-      const upperLimit = maxStock !== undefined ? maxStock : 99;
-      const clampedQty = Math.max(1, Math.min(quantity, upperLimit));
+      const clampedQty = clampQuantity(quantity, maxStock);
 
       const existingItem = state.items.find(
-        (item) => item.productId === productId && item.selectedColor.name === selectedColor
+        (item) => item.productId === productId && item.selectedColor.name === selectedColor,
       );
 
       if (existingItem) {

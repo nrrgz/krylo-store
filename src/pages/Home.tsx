@@ -2,54 +2,9 @@ import { Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
+import { categories, products } from '../data';
 
-const mockCategories = [
-  { id: 'cat1', name: 'Keyboards', slug: 'keyboards' },
-  { id: 'cat2', name: 'Mice', slug: 'mice' },
-  { id: 'cat3', name: 'Audio', slug: 'audio' },
-  { id: 'cat4', name: 'Charging', slug: 'charging' },
-  { id: 'cat5', name: 'Cables', slug: 'cables' },
-  { id: 'cat6', name: 'Desk', slug: 'desk' },
-];
-
-const mockFeaturedProducts = [
-  {
-    id: 'p_kb_1',
-    name: 'Krylo Pro Mechanical Keyboard',
-    brand: 'Krylo',
-    price: 149.99,
-    category: 'Keyboards',
-    image: '/images/products/keyboard-pro-1.png',
-    isNew: true,
-  },
-  {
-    id: 'p_mi_1',
-    name: 'Krylo Precision Mouse',
-    brand: 'Krylo',
-    price: 89.99,
-    category: 'Mice',
-    image: '/images/products/mouse-precision-1.png',
-    isNew: false,
-  },
-  {
-    id: 'p_au_1',
-    name: 'Krylo SoundScape ANC',
-    brand: 'Krylo',
-    price: 249.99,
-    category: 'Audio',
-    image: '/images/products/audio-anc-1.png',
-    isNew: true,
-  },
-  {
-    id: 'p_dk_1',
-    name: 'Krylo Merino Wool Desk Mat',
-    brand: 'Krylo',
-    price: 59.99,
-    category: 'Desk',
-    image: '/images/products/desk-mat-wool-1.png',
-    isNew: false,
-  },
-];
+const featuredProducts = products.filter((product) => product.isFeatured).slice(0, 4);
 
 export function Home() {
   return (
@@ -59,9 +14,7 @@ export function Home() {
           <Badge variant="outline" className="mb-6 py-1 px-3 text-sm tracking-wider uppercase text-gray-500 border-gray-300">
             Welcome to Krylo
           </Badge>
-          <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tighter text-gray-900 mb-6 drop-shadow-sm">
-            Krylo
-          </h1>
+          <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tighter text-gray-900 mb-6 drop-shadow-sm">Krylo</h1>
           <p className="text-xl sm:text-2xl text-gray-600 mb-10 max-w-2xl mx-auto font-medium">
             Tech accessories for a cleaner desk setup.
           </p>
@@ -88,12 +41,15 @@ export function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          {mockCategories.map((category) => (
+          {categories.map((category) => (
             <Link key={category.id} to={`/products?category=${category.slug}`}>
-              <Card className="h-full flex items-center justify-center p-6 sm:p-8 hover:border-gray-400 hover:shadow-md transition-all group bg-gray-50 cursor-pointer">
-                <span className="font-semibold text-gray-700 group-hover:text-gray-900 text-sm sm:text-base text-center">
-                  {category.name}
-                </span>
+              <Card className="h-full overflow-hidden hover:border-gray-400 hover:shadow-md transition-all group bg-gray-50 cursor-pointer">
+                <div className="h-24 w-full bg-gray-200 overflow-hidden">
+                  <img src={category.image} alt={category.name} className="w-full h-full object-cover" loading="lazy" />
+                </div>
+                <div className="p-4 text-center">
+                  <span className="font-semibold text-gray-700 group-hover:text-gray-900 text-sm sm:text-base">{category.name}</span>
+                </div>
               </Card>
             </Link>
           ))}
@@ -106,21 +62,12 @@ export function Home() {
           <p className="text-gray-500">Hand-picked essentials for peak productivity.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {mockFeaturedProducts.map((product) => (
+          {featuredProducts.map((product) => (
             <Link key={product.id} to={`/products/${product.id}`} className="group drop-shadow-sm hover:drop-shadow-lg transition-all">
               <Card className="h-full flex flex-col overflow-hidden border-transparent bg-gray-50 group-hover:bg-white group-hover:border-gray-200 transition-colors">
                 <div className="aspect-square bg-gray-200 w-full relative overflow-hidden">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                  />
-                  {product.isNew && (
-                    <Badge className="absolute top-3 left-3 bg-gray-900 text-white border-0 z-10">
-                      New Arrival
-                    </Badge>
-                  )}
+                  <img src={product.images[0] || ''} alt={product.name} className="w-full h-full object-cover" loading="lazy" />
+                  <Badge className="absolute top-3 left-3 bg-gray-900 text-white border-0 z-10">Featured</Badge>
                 </div>
 
                 <CardHeader className="flex-grow pb-2 p-5">
