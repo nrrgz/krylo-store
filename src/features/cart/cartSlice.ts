@@ -18,8 +18,12 @@ const resolveMaxStock = (productId: string, selectedColor: string): number | und
 };
 
 const clampQuantity = (quantity: number, maxStock?: number): number => {
-  const upperLimit = maxStock !== undefined ? maxStock : 99;
-  return Math.max(1, Math.min(quantity, upperLimit));
+  if (maxStock !== undefined) {
+    if (maxStock <= 0) return 0;
+    return Math.max(1, Math.min(quantity, maxStock));
+  }
+
+  return Math.max(1, Math.min(quantity, 99));
 };
 
 export const cartSlice = createSlice({
@@ -58,6 +62,13 @@ export const cartSlice = createSlice({
     ) => {
       const { productId, selectedColor, quantity, maxStock } = action.payload;
       const clampedQty = clampQuantity(quantity, maxStock);
+
+      if (clampedQty === 0) {
+        state.items = state.items.filter(
+          (item) => !(item.productId === productId && item.selectedColor.name === selectedColor),
+        );
+        return;
+      }
 
       const existingItem = state.items.find(
         (item) => item.productId === productId && item.selectedColor.name === selectedColor,

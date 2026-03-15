@@ -59,7 +59,7 @@ Product images are referenced from `src/data/products.ts` and served from:
 
 Category images are referenced from `src/data/categories.ts` and served from:
 
-- `public/images/categories/<file>.svg`
+- `public/images/categories/<file>.png`
 
 ## Current Auth Model
 
