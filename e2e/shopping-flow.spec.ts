@@ -57,7 +57,42 @@ const seedApp = async (page: Page, options: SeedOptions) => {
   }, options);
 };
 
+const mockPaymentFlow = async (page: Page) => {
+  await page.route('**/api/payment/create-checkout-session', async (route) => {
+    const request = route.request();
+    const payload = request.postDataJSON() as { origin?: string };
+    const origin = payload.origin || 'http://127.0.0.1:4173';
+
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        sessionId: 'demo_e2e_paid_001',
+        checkoutUrl: `${origin}/checkout?payment=success&session_id=demo_e2e_paid_001`,
+        mode: 'demo',
+      }),
+    });
+  });
+
+  await page.route('**/api/payment/verify-session', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        paid: true,
+        mode: 'demo',
+        customer: {
+          name: BASE_USER.name,
+          email: BASE_USER.email,
+          address: '123 Main St, Baku AZ1000',
+        },
+      }),
+    });
+  });
+};
+
 test('shop flow: product -> cart -> checkout -> confirmation -> account', async ({ page }) => {
+  await mockPaymentFlow(page);
   await seedApp(page, {
     users: [BASE_USER],
     authSession: makeSession(BASE_USER, '2099-01-01T00:00:00.000Z', true),
@@ -83,7 +118,7 @@ test('shop flow: product -> cart -> checkout -> confirmation -> account', async 
   await page.getByLabel('Street address').fill('123 Main St');
   await page.getByLabel('City').fill('Baku');
   await page.getByLabel('Postal code').fill('AZ1000');
-  await page.locator('button:visible', { hasText: 'Place Order' }).click();
+  await page.locator('button:visible', { hasText: 'Pay & Place Order' }).click();
 
   await expect(page).toHaveURL(/\/order\/ORD-/);
   await expect(page.getByRole('heading', { name: /Thank you for your order!/i })).toBeVisible();

@@ -585,3 +585,17 @@ const validateImagesByColor = (product: Product): Product => {
 
 export const products: Product[] = rawProducts.map(validateImagesByColor);
 
+export const resolveProductImageForColor = (
+  product: Product | undefined,
+  colorName: string | undefined,
+): string => {
+  if (!product) return '';
+
+  if (colorName) {
+    const mapped = product.imagesByColor?.[colorName];
+    if (mapped) return mapped;
+  }
+
+  return product.images[0] || '';
+};
+

@@ -93,15 +93,10 @@ Included:
 - Order lifecycle progression/reconciliation behavior
 - Product data integrity checks (`imagesByColor` mappings)
 - Browser E2E flow coverage (shopping, auth, route guards, edge paths)
-
-Still recommended next:
-
-- Component-level tests for ProductDetails image/color interactions
-- Error-boundary rendering tests (route `errorElement`)
-- API-contract tests if/when backend integration is added
-
+- Route-level error boundary UX rendering
 ## Security
 
 - Latest audit status: `0` vulnerabilities
 - Verify anytime with:
   - `npm audit`
+

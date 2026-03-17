@@ -56,6 +56,7 @@ export function Checkout() {
   const paymentStatus = searchParams.get('payment');
   const checkoutSessionId = searchParams.get('session_id');
   const shouldRedirectToCart = items.length === 0 && !isPlacingOrder && paymentStatus !== 'success';
+  const isCheckoutLocked = isPlacingOrder || isFinalizingPayment || items.length === 0;
 
   const tax = calculateTax(subtotal);
   const shipping = 0.0;
@@ -140,6 +141,8 @@ export function Checkout() {
   ]);
 
   const onSubmit = async (data: CheckoutFormValues) => {
+    if (isCheckoutLocked) return;
+
     setIsPlacingOrder(true);
     setCheckoutError(null);
 
@@ -250,7 +253,7 @@ export function Checkout() {
             </section>
 
             <div className="lg:hidden mt-4">
-              <Button type="submit" size="lg" className="w-full text-base h-12">
+              <Button type="submit" size="lg" className="w-full text-base h-12" disabled={isCheckoutLocked}>
                 {isPlacingOrder ? 'Processing...' : 'Pay & Place Order'}
               </Button>
             </div>
@@ -297,7 +300,13 @@ export function Checkout() {
                 <span>${total.toFixed(2)}</span>
               </div>
 
-              <Button type="submit" form="checkout-form" size="lg" className="w-full mt-4 hidden lg:flex text-base h-12">
+              <Button
+                type="submit"
+                form="checkout-form"
+                size="lg"
+                className="w-full mt-4 hidden lg:flex text-base h-12"
+                disabled={isCheckoutLocked}
+              >
                 {isPlacingOrder ? 'Processing...' : 'Pay & Place Order'}
               </Button>
             </CardContent>

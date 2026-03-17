@@ -185,7 +185,7 @@ const handleVerifySession = async (req: IncomingMessage, res: ServerResponse): P
   });
 };
 
-const paymentApiMiddleware = async (
+export const createPaymentApiMiddleware = async (
   req: IncomingMessage,
   res: ServerResponse,
   next: () => void,
@@ -219,12 +219,12 @@ export const paymentApiPlugin = (): Plugin => ({
   name: 'payment-api-plugin',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
-      void paymentApiMiddleware(req, res, next);
+      void createPaymentApiMiddleware(req, res, next);
     });
   },
   configurePreviewServer(server) {
     server.middlewares.use((req, res, next) => {
-      void paymentApiMiddleware(req, res, next);
+      void createPaymentApiMiddleware(req, res, next);
     });
   },
 });

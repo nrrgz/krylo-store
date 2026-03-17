@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { useEffect, useRef, useSyncExternalStore } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectAuthUser, logout } from '../features/auth/authSlice';
 import { Button } from '../components/ui/Button';
@@ -7,7 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import type { Order, OrderStatus } from '../types';
 import { reconcileOrders } from '../lib/orderLifecycle';
-import { products } from '../data/products';
+import { products, resolveProductImageForColor } from '../data/products';
 
 const statusClasses: Record<OrderStatus, string> = {
   processing: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -15,6 +15,41 @@ const statusClasses: Record<OrderStatus, string> = {
   delivered: 'bg-green-100 text-green-800 border-green-200',
   cancelled: 'bg-rose-100 text-rose-800 border-rose-200',
 };
+
+function OrderThumbnail({
+  primary,
+  fallback,
+  alt,
+}: {
+  primary: string;
+  fallback: string;
+  alt: string;
+}) {
+  const sources = useMemo(
+    () => Array.from(new Set([primary, fallback].filter((source) => Boolean(source.trim())))),
+    [primary, fallback],
+  );
+  const [sourceIndex, setSourceIndex] = useState(0);
+
+  const currentSource = sources[sourceIndex] || '';
+
+  return (
+    <div className="w-10 h-10 rounded-md bg-[var(--surface-2)] overflow-hidden flex-shrink-0 border border-[var(--border)]">
+      {currentSource ? (
+        <img
+          src={currentSource}
+          alt={alt}
+          className="w-full h-full object-cover block"
+          onError={() => setSourceIndex((prev) => prev + 1)}
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+          Item
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function Account() {
   const user = useAppSelector(selectAuthUser);
@@ -132,28 +167,23 @@ export function Account() {
                     const firstItem = order.items[0];
                     const remainingItems = Math.max(0, order.items.length - 1);
                     const shortOrderId = order.orderId.replace('ORD-', '').slice(0, 8).toUpperCase();
+                    const productMatch = firstItem
+                      ? products.find((product) => product.id === firstItem.productId)
+                      : undefined;
                     const productFallbackImage = firstItem
-                      ? products.find((product) => product.id === firstItem.productId)?.images[0] || ''
+                      ? resolveProductImageForColor(productMatch, firstItem.selectedColor.name)
                       : '';
-                    const thumbnailSrc = firstItem?.image || productFallbackImage;
+                    const thumbnailSrc = firstItem?.image || '';
 
                     return (
                       <div key={order.orderId} className="border border-[var(--border)] rounded-lg p-4">
                         <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
                           <div className="flex gap-3">
-                            <div className="w-10 h-10 rounded-md bg-[var(--surface-2)] overflow-hidden flex-shrink-0 border border-[var(--border)]">
-                              {thumbnailSrc ? (
-                                <img
-                                  src={thumbnailSrc}
-                                  alt={firstItem?.name || 'Ordered item'}
-                                  className="w-full h-full object-cover block"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
-                                  Item
-                                </div>
-                              )}
-                            </div>
+                            <OrderThumbnail
+                              primary={thumbnailSrc}
+                              fallback={productFallbackImage}
+                              alt={firstItem?.name || 'Ordered item'}
+                            />
                             <div>
                               <p className="font-semibold text-gray-900">
                                 {firstItem?.name || `Order ${order.orderId}`}

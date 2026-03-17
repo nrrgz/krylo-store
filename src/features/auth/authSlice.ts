@@ -7,6 +7,7 @@ import { authStorage } from './authStorage';
 const initialState: AuthState = {
   user: null,
   status: 'signed_out',
+  hydrated: false,
 };
 
 const authSlice = createSlice({
@@ -16,10 +17,12 @@ const authSlice = createSlice({
     setSignedIn: (state, action: PayloadAction<User>) => {
       state.user = action.payload;
       state.status = 'signed_in';
+      state.hydrated = true;
     },
     setSignedOut: (state) => {
       state.user = null;
       state.status = 'signed_out';
+      state.hydrated = true;
     },
   },
 });
@@ -57,5 +60,6 @@ export const logout = (): AppThunk => (dispatch) => {
 export const selectAuthUser = (state: { auth: AuthState }) => state.auth.user;
 export const selectIsAuthed = (state: { auth: AuthState }) => state.auth.status === 'signed_in';
 export const selectAuthStatus = (state: { auth: AuthState }) => state.auth.status;
+export const selectAuthHydrated = (state: { auth: AuthState }) => state.auth.hydrated;
 
 export default authSlice.reducer;
