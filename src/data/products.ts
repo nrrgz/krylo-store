@@ -567,7 +567,10 @@ const validateImagesByColor = (product: Product): Product => {
     sanitized[colorName] = imagePath;
   }
 
-  if (invalidMappings.length > 0 && import.meta.env.DEV) {
+  const hostname = (globalThis as { location?: { hostname?: string } }).location?.hostname;
+  const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
+
+  if (invalidMappings.length > 0 && isLocalDev) {
     console.warn(
       `[products] Invalid imagesByColor mappings for "${product.id}": ${invalidMappings.join(', ')}`,
     );

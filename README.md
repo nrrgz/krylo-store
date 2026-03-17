@@ -41,6 +41,19 @@ npm run dev
 
 - `http://localhost:5173`
 
+## Payment Setup (Stripe)
+
+The app now supports server-side Stripe Checkout via Vite middleware endpoints:
+
+- `POST /api/payment/create-checkout-session`
+- `POST /api/payment/verify-session`
+
+For real payments in test mode, set:
+
+- `STRIPE_SECRET_KEY` in your terminal/session before running `npm run dev`
+
+If `STRIPE_SECRET_KEY` is not set, the app runs a built-in demo payment fallback so local development still works.
+
 ## Scripts
 
 - `npm run dev`: start local dev server
