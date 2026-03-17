@@ -38,6 +38,11 @@ export interface CartItem {
 
 export type OrderStatus = 'processing' | 'shipped' | 'delivered' | 'cancelled';
 
+export interface OrderStatusEvent {
+  status: OrderStatus;
+  at: string;
+}
+
 export interface Order {
   orderId: string;
   createdAt: string;
@@ -54,6 +59,7 @@ export interface Order {
     tax: number;
     total: number;
   };
+  statusHistory: OrderStatusEvent[];
 }
 
 

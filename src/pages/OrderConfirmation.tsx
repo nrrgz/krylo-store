@@ -6,11 +6,7 @@ import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import type { Order, OrderStatus } from '../types';
-
-const normalizeStatus = (status: unknown): OrderStatus => {
-  if (status === 'shipped' || status === 'delivered' || status === 'cancelled') return status;
-  return 'processing';
-};
+import { reconcileOrder } from '../lib/orderLifecycle';
 
 const statusClasses: Record<OrderStatus, string> = {
   processing: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -33,7 +29,11 @@ export function OrderConfirmation() {
       if (storedLastOrder) {
         const parsed = JSON.parse(storedLastOrder) as Partial<Order>;
         if (parsed.orderId === orderId) {
-          foundOrder = { ...parsed, status: normalizeStatus(parsed.status) } as Order;
+          const reconciled = reconcileOrder(parsed);
+          if (reconciled) {
+            foundOrder = reconciled;
+            sessionStorage.setItem('krylo-last-order', JSON.stringify(reconciled));
+          }
         }
       }
 
@@ -42,10 +42,16 @@ export function OrderConfirmation() {
         const storedUserOrders = localStorage.getItem(orderKey);
         if (storedUserOrders) {
           const parsedOrders = JSON.parse(storedUserOrders) as Array<Partial<Order>>;
-          const matched = parsedOrders.find((candidate) => candidate.orderId === orderId);
-          if (matched) {
-            foundOrder = { ...matched, status: normalizeStatus(matched.status) } as Order;
+          const reconciledOrders = parsedOrders
+            .map((candidate) => reconcileOrder(candidate))
+            .filter((candidate): candidate is Order => Boolean(candidate));
+
+          const matched = reconciledOrders.find((candidate) => candidate.orderId === orderId);
+          if (matched && !foundOrder) {
+            foundOrder = matched;
           }
+
+          localStorage.setItem(orderKey, JSON.stringify(reconciledOrders));
         }
       }
 

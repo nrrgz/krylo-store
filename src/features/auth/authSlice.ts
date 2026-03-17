@@ -39,12 +39,12 @@ export const hydrateAuth = (): AppThunk => (dispatch) => {
   dispatch(setSignedOut());
 };
 
-export const register = (payload: { email: string; name: string }): AppThunk => (dispatch) => {
+export const register = (payload: { email: string; name: string; remember?: boolean }): AppThunk => (dispatch) => {
   const user = authStorage.registerUser(payload);
   dispatch(setSignedIn(user));
 };
 
-export const login = (payload: { email: string }): AppThunk => (dispatch) => {
+export const login = (payload: { email: string; remember?: boolean }): AppThunk => (dispatch) => {
   const user = authStorage.loginUser(payload);
   dispatch(setSignedIn(user));
 };

@@ -1,16 +1,12 @@
 import { Link } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useEffect, useRef, useSyncExternalStore } from 'react';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectAuthUser, logout } from '../features/auth/authSlice';
 import { Button } from '../components/ui/Button';
 import { Badge } from '../components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import type { Order, OrderStatus } from '../types';
-
-const normalizeStatus = (status: unknown): OrderStatus => {
-  if (status === 'shipped' || status === 'delivered' || status === 'cancelled') return status;
-  return 'processing';
-};
+import { reconcileOrders } from '../lib/orderLifecycle';
 
 const statusClasses: Record<OrderStatus, string> = {
   processing: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -22,23 +18,71 @@ const statusClasses: Record<OrderStatus, string> = {
 export function Account() {
   const user = useAppSelector(selectAuthUser);
   const dispatch = useAppDispatch();
+  const orderStorageKey = user ? `krylo-orders-${user.id}` : null;
+  const snapshotCacheRef = useRef<{ raw: string | null; orders: Order[] }>({
+    raw: null,
+    orders: [],
+  });
 
-  const orders = useMemo<Order[]>(() => {
-    if (!user) return [];
+  const orders = useSyncExternalStore(
+    (notify) => {
+      if (!orderStorageKey) return () => undefined;
+
+      const onStorage = (event: StorageEvent) => {
+        if (event.key === orderStorageKey || event.key === null) {
+          notify();
+        }
+      };
+
+      // These help the current tab refresh if localStorage changed elsewhere.
+      const onFocus = () => notify();
+      const onVisibility = () => notify();
+
+      window.addEventListener('storage', onStorage);
+      window.addEventListener('focus', onFocus);
+      document.addEventListener('visibilitychange', onVisibility);
+
+      return () => {
+        window.removeEventListener('storage', onStorage);
+        window.removeEventListener('focus', onFocus);
+        document.removeEventListener('visibilitychange', onVisibility);
+      };
+    },
+    () => {
+      if (!orderStorageKey) return snapshotCacheRef.current.orders;
+      try {
+        const storedOrders = localStorage.getItem(orderStorageKey);
+        if (storedOrders === snapshotCacheRef.current.raw) {
+          return snapshotCacheRef.current.orders;
+        }
+
+        if (!storedOrders) {
+          snapshotCacheRef.current = { raw: null, orders: [] };
+          return snapshotCacheRef.current.orders;
+        }
+
+        const parsed = JSON.parse(storedOrders) as Array<Partial<Order>>;
+        const reconciled = reconcileOrders(parsed);
+        snapshotCacheRef.current = { raw: storedOrders, orders: reconciled };
+        return snapshotCacheRef.current.orders;
+      } catch (e) {
+        console.error('Failed to load orders', e);
+        snapshotCacheRef.current = { raw: null, orders: [] };
+        return snapshotCacheRef.current.orders;
+      }
+    },
+    () => snapshotCacheRef.current.orders,
+  );
+
+  useEffect(() => {
+    if (!orderStorageKey) return;
+
     try {
-      const storedOrders = localStorage.getItem(`krylo-orders-${user.id}`);
-      if (!storedOrders) return [];
-
-      const parsed = JSON.parse(storedOrders) as Array<Partial<Order>>;
-      return parsed.map((order) => ({
-        ...order,
-        status: normalizeStatus(order.status),
-      })) as Order[];
+      localStorage.setItem(orderStorageKey, JSON.stringify(orders));
     } catch (e) {
-      console.error('Failed to load orders', e);
-      return [];
+      console.error('Failed to persist reconciled orders', e);
     }
-  }, [user]);
+  }, [orderStorageKey, orders]);
 
   const handleSignOut = () => {
     dispatch(logout());

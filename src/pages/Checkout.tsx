@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectCartItems, selectCartSubtotal, clearCart } from '../features/cart/cartSlice';
 import { selectAuthUser } from '../features/auth/authSlice';
 import { calculateTax } from '../lib/pricing';
+import type { Order } from '../types';
 
 const checkoutSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -54,9 +55,10 @@ export function Checkout() {
     setIsPlacingOrder(true);
 
     const orderId = createOrderId();
-    const order = {
+    const createdAt = new Date().toISOString();
+    const order: Order = {
       orderId,
-      createdAt: new Date().toISOString(),
+      createdAt,
       status: 'processing',
       customer: {
         name: data.fullName,
@@ -70,6 +72,7 @@ export function Checkout() {
         tax,
         total,
       },
+      statusHistory: [{ status: 'processing', at: createdAt }],
     };
 
     sessionStorage.setItem('krylo-last-order', JSON.stringify(order));

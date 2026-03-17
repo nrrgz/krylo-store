@@ -34,4 +34,30 @@ describe('authStorage', () => {
   it('throws for unknown login', () => {
     expect(() => authStorage.loginUser({ email: 'missing@example.com' })).toThrow('No account found');
   });
+
+  it('expires session when expiresAt is in the past', () => {
+    const user = authStorage.registerUser({ email: 'user@example.com', name: 'User Name' });
+
+    localStorage.setItem(
+      'krylo-auth-v1',
+      JSON.stringify({
+        user,
+        issuedAt: '2026-03-01T00:00:00.000Z',
+        expiresAt: '2026-03-01T00:00:01.000Z',
+        remember: false,
+      }),
+    );
+
+    expect(authStorage.loadSessionUser()).toBeNull();
+    expect(localStorage.getItem('krylo-auth-v1')).toBeNull();
+  });
+
+  it('invalidates session when user no longer exists', () => {
+    const user = authStorage.registerUser({ email: 'user@example.com', name: 'User Name' });
+    authStorage.saveUsers([]);
+    authStorage.saveSessionUser(user, true);
+
+    expect(authStorage.loadSessionUser()).toBeNull();
+    expect(localStorage.getItem('krylo-auth-v1')).toBeNull();
+  });
 });
