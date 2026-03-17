@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import { useEffect, useRef, useState } from 'react';
+import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -9,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectCartItems, selectCartSubtotal, clearCart } from '../features/cart/cartSlice';
 import { selectAuthUser } from '../features/auth/authSlice';
+import { calculateTax } from '../lib/pricing';
+import type { Order } from '../types';
+import { createCheckoutSession, verifyCheckoutSession } from '../lib/api/paymentApi';
 
 const checkoutSchema = z.object({
   email: z.string().email('Invalid email address'),
@@ -25,13 +28,22 @@ function createOrderId(): string {
   return `ORD-${crypto.randomUUID()}`;
 }
 
+function createOrderIdFromSession(sessionId: string): string {
+  const normalized = sessionId.replace(/[^a-zA-Z0-9]/g, '').slice(-24);
+  return normalized ? `ORD-${normalized}` : createOrderId();
+}
+
 export function Checkout() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const dispatch = useAppDispatch();
   const items = useAppSelector(selectCartItems);
   const subtotal = useAppSelector(selectCartSubtotal);
   const user = useAppSelector(selectAuthUser);
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
+  const [isFinalizingPayment, setIsFinalizingPayment] = useState(false);
+  const finalizationLockRef = useRef<string | null>(null);
 
   const {
     register,
@@ -41,57 +53,134 @@ export function Checkout() {
     resolver: zodResolver(checkoutSchema),
   });
 
-  if (items.length === 0 && !isPlacingOrder) {
-    return <Navigate to="/cart" replace />;
-  }
+  const paymentStatus = searchParams.get('payment');
+  const checkoutSessionId = searchParams.get('session_id');
+  const shouldRedirectToCart = items.length === 0 && !isPlacingOrder && paymentStatus !== 'success';
+  const isCheckoutLocked = isPlacingOrder || isFinalizingPayment || items.length === 0;
 
-  const tax = subtotal * 0.1;
+  const tax = calculateTax(subtotal);
   const shipping = 0.0;
   const total = subtotal + tax + shipping;
 
-  const onSubmit = (data: CheckoutFormValues) => {
-    setIsPlacingOrder(true);
+  useEffect(() => {
+    if (paymentStatus !== 'success' || !checkoutSessionId || isFinalizingPayment || !user) return;
 
-    const orderId = createOrderId();
-    const order = {
-      orderId,
-      createdAt: new Date().toISOString(),
-      status: 'processing',
-      customer: {
-        name: data.fullName,
-        email: data.email,
-        address: `${data.address}, ${data.city} ${data.postalCode}`,
-      },
-      items,
-      totals: {
-        subtotal,
-        shipping,
-        tax,
-        total,
-      },
-    };
+    const processedKey = `krylo-processed-session-${checkoutSessionId}`;
+    if (sessionStorage.getItem(processedKey) === 'done') return;
+    if (finalizationLockRef.current === checkoutSessionId) return;
 
-    sessionStorage.setItem('krylo-last-order', JSON.stringify(order));
-
-    if (user) {
+    const finalize = async () => {
+      finalizationLockRef.current = checkoutSessionId;
       try {
+        setIsPlacingOrder(true);
+        setIsFinalizingPayment(true);
+        setCheckoutError(null);
+        sessionStorage.setItem(processedKey, 'pending');
+
+        const verification = await verifyCheckoutSession({ sessionId: checkoutSessionId });
+        if (!verification.paid) {
+          throw new Error('Payment was not completed.');
+        }
+
+        const orderId = createOrderIdFromSession(checkoutSessionId);
+        const createdAt = new Date().toISOString();
+        const order: Order = {
+          orderId,
+          createdAt,
+          status: 'processing',
+          customer: {
+            name: verification.customer?.name || user.name,
+            email: verification.customer?.email || user.email,
+            address: verification.customer?.address || 'Address not provided',
+          },
+          items,
+          totals: {
+            subtotal,
+            shipping,
+            tax,
+            total,
+          },
+          statusHistory: [{ status: 'processing', at: createdAt }],
+        };
+
+        sessionStorage.setItem('krylo-last-order', JSON.stringify(order));
+
         const orderKey = `krylo-orders-${user.id}`;
         const existing = localStorage.getItem(orderKey);
         let userOrders = existing ? JSON.parse(existing) : [];
-        userOrders = [order, ...userOrders];
+        userOrders = [order, ...userOrders.filter((storedOrder: Order) => storedOrder.orderId !== orderId)];
         localStorage.setItem(orderKey, JSON.stringify(userOrders));
-      } catch (e) {
-        console.error('Failed to save order to history', e);
-      }
-    }
 
-    dispatch(clearCart());
-    navigate(`/order/${orderId}`);
+        sessionStorage.setItem(processedKey, 'done');
+        dispatch(clearCart());
+        navigate(`/order/${orderId}`, { replace: true });
+      } catch (error) {
+        const message = error instanceof Error ? error.message : 'Could not finalize payment.';
+        setCheckoutError(message);
+        sessionStorage.removeItem(processedKey);
+      } finally {
+        setIsPlacingOrder(false);
+        setIsFinalizingPayment(false);
+        finalizationLockRef.current = null;
+      }
+    };
+
+    void finalize();
+  }, [
+    paymentStatus,
+    checkoutSessionId,
+    isFinalizingPayment,
+    user,
+    items,
+    subtotal,
+    shipping,
+    tax,
+    total,
+    dispatch,
+    navigate,
+  ]);
+
+  const onSubmit = async (data: CheckoutFormValues) => {
+    if (isCheckoutLocked) return;
+
+    setIsPlacingOrder(true);
+    setCheckoutError(null);
+
+    try {
+      const { checkoutUrl } = await createCheckoutSession({
+        items,
+        customer: {
+          name: data.fullName,
+          email: data.email,
+          address: `${data.address}, ${data.city} ${data.postalCode}`,
+        },
+      });
+
+      window.location.assign(checkoutUrl);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unable to start payment.';
+      setCheckoutError(message);
+      setIsPlacingOrder(false);
+    }
   };
+
+  if (shouldRedirectToCart) {
+    return <Navigate to="/cart" replace />;
+  }
 
   return (
     <div className="container-base py-12">
       <h1 className="text-3xl font-extrabold tracking-tight text-gray-900 mb-8">Checkout</h1>
+      {paymentStatus === 'canceled' && (
+        <div className="mb-6 rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          Payment was canceled. You can review your details and try again.
+        </div>
+      )}
+      {checkoutError && (
+        <div className="mb-6 rounded-md border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-700">
+          {checkoutError}
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
         <div className="lg:col-span-7 xl:col-span-8">
@@ -159,13 +248,13 @@ export function Checkout() {
                 Payment
               </h2>
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center text-gray-500 text-sm">
-                Payment integration will be added here.
+                You will be redirected to secure Stripe Checkout. If Stripe keys are not configured, demo mode will be used.
               </div>
             </section>
 
             <div className="lg:hidden mt-4">
-              <Button type="submit" size="lg" className="w-full text-base h-12">
-                Place Order
+              <Button type="submit" size="lg" className="w-full text-base h-12" disabled={isCheckoutLocked}>
+                {isPlacingOrder ? 'Processing...' : 'Pay & Place Order'}
               </Button>
             </div>
           </form>
@@ -211,8 +300,14 @@ export function Checkout() {
                 <span>${total.toFixed(2)}</span>
               </div>
 
-              <Button type="submit" form="checkout-form" size="lg" className="w-full mt-4 hidden lg:flex text-base h-12">
-                Place Order
+              <Button
+                type="submit"
+                form="checkout-form"
+                size="lg"
+                className="w-full mt-4 hidden lg:flex text-base h-12"
+                disabled={isCheckoutLocked}
+              >
+                {isPlacingOrder ? 'Processing...' : 'Pay & Place Order'}
               </Button>
             </CardContent>
           </Card>

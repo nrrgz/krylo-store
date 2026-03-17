@@ -1,16 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useAppSelector } from '../app/hooks';
-import { selectAuthStatus, selectAuthUser } from '../features/auth/authSlice';
+import { selectAuthUser } from '../features/auth/authSlice';
 import { Badge } from '../components/ui/Badge';
 import { Button } from '../components/ui/Button';
 import { Card, CardContent } from '../components/ui/Card';
 import type { Order, OrderStatus } from '../types';
-
-const normalizeStatus = (status: unknown): OrderStatus => {
-  if (status === 'shipped' || status === 'delivered' || status === 'cancelled') return status;
-  return 'processing';
-};
+import { reconcileOrder } from '../lib/orderLifecycle';
 
 const statusClasses: Record<OrderStatus, string> = {
   processing: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -21,14 +17,9 @@ const statusClasses: Record<OrderStatus, string> = {
 
 export function OrderConfirmation() {
   const { orderId } = useParams();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const authStatus = useAppSelector(selectAuthStatus);
   const user = useAppSelector(selectAuthUser);
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const fromCheckout = Boolean((location.state as { fromCheckout?: boolean } | null)?.fromCheckout);
 
   useEffect(() => {
     try {
@@ -38,7 +29,11 @@ export function OrderConfirmation() {
       if (storedLastOrder) {
         const parsed = JSON.parse(storedLastOrder) as Partial<Order>;
         if (parsed.orderId === orderId) {
-          foundOrder = { ...parsed, status: normalizeStatus(parsed.status) } as Order;
+          const reconciled = reconcileOrder(parsed);
+          if (reconciled) {
+            foundOrder = reconciled;
+            sessionStorage.setItem('krylo-last-order', JSON.stringify(reconciled));
+          }
         }
       }
 
@@ -47,10 +42,16 @@ export function OrderConfirmation() {
         const storedUserOrders = localStorage.getItem(orderKey);
         if (storedUserOrders) {
           const parsedOrders = JSON.parse(storedUserOrders) as Array<Partial<Order>>;
-          const matched = parsedOrders.find((candidate) => candidate.orderId === orderId);
-          if (matched) {
-            foundOrder = { ...matched, status: normalizeStatus(matched.status) } as Order;
+          const reconciledOrders = parsedOrders
+            .map((candidate) => reconcileOrder(candidate))
+            .filter((candidate): candidate is Order => Boolean(candidate));
+
+          const matched = reconciledOrders.find((candidate) => candidate.orderId === orderId);
+          if (matched && !foundOrder) {
+            foundOrder = matched;
           }
+
+          localStorage.setItem(orderKey, JSON.stringify(reconciledOrders));
         }
       }
 
@@ -62,16 +63,6 @@ export function OrderConfirmation() {
       setLoading(false);
     }
   }, [orderId, user]);
-
-  useEffect(() => {
-    if (!fromCheckout || !order || authStatus !== 'signed_in') return;
-
-    const timer = setTimeout(() => {
-      navigate('/account', { replace: true });
-    }, 2500);
-
-    return () => clearTimeout(timer);
-  }, [fromCheckout, order, authStatus, navigate]);
 
   if (loading) {
     return (
@@ -122,10 +113,6 @@ export function OrderConfirmation() {
       <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 mb-4">Thank you for your order!</h1>
       <p className="text-lg text-gray-600 mb-2">We've received your order and are getting it ready to ship.</p>
 
-      {fromCheckout && authStatus === 'signed_in' && (
-        <p className="text-sm text-gray-500 mb-4">Redirecting to your orders...</p>
-      )}
-
       <div className="flex items-center gap-3 mb-10">
         <p className="text-gray-500 font-medium">
           Order ID: <span className="text-gray-900">{order.orderId}</span>
@@ -167,6 +154,23 @@ export function OrderConfirmation() {
               <span>${order.totals.total.toFixed(2)}</span>
             </div>
           </div>
+
+          {order.statusHistory.length > 0 && (
+            <div className="pt-5 mt-5 border-t border-gray-200">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-600 mb-3">Status Timeline</h3>
+              <div className="space-y-2">
+                {order.statusHistory.map((event) => (
+                  <div
+                    key={`${order.orderId}-${event.status}-${event.at}`}
+                    className="flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+                  >
+                    <span className="text-sm font-medium text-gray-900 capitalize">{event.status}</span>
+                    <span className="text-xs text-gray-500">{new Date(event.at).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

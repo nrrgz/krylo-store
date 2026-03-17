@@ -8,4 +8,5 @@ export interface User {
 export interface AuthState {
   user: User | null;
   status: 'signed_out' | 'signed_in';
+  hydrated: boolean;
 }

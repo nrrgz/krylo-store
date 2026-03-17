@@ -41,6 +41,19 @@ npm run dev
 
 - `http://localhost:5173`
 
+## Payment Setup (Stripe)
+
+The app now supports server-side Stripe Checkout via Vite middleware endpoints:
+
+- `POST /api/payment/create-checkout-session`
+- `POST /api/payment/verify-session`
+
+For real payments in test mode, set:
+
+- `STRIPE_SECRET_KEY` in your terminal/session before running `npm run dev`
+
+If `STRIPE_SECRET_KEY` is not set, the app runs a built-in demo payment fallback so local development still works.
+
 ## Scripts
 
 - `npm run dev`: start local dev server
@@ -49,6 +62,9 @@ npm run dev
 - `npm run lint`: run ESLint
 - `npm run test -- --run`: run tests once
 - `npm run test:ui`: Vitest UI mode
+- `npm run test:e2e`: run Playwright end-to-end tests
+- `npm run test:e2e:ui`: run Playwright with interactive UI
+- `npm run test:e2e:headed`: run Playwright in headed mode
 - `npm run format`: format source files with Prettier
 
 ## Image Conventions
@@ -59,7 +75,7 @@ Product images are referenced from `src/data/products.ts` and served from:
 
 Category images are referenced from `src/data/categories.ts` and served from:
 
-- `public/images/categories/<file>.svg`
+- `public/images/categories/<file>.png`
 
 ## Current Auth Model
 
@@ -74,9 +90,13 @@ Included:
 - Cart reducer behavior
 - Auth storage service behavior
 - Catalog filtering/sorting/pagination utility behavior
+- Order lifecycle progression/reconciliation behavior
+- Product data integrity checks (`imagesByColor` mappings)
+- Browser E2E flow coverage (shopping, auth, route guards, edge paths)
+- Route-level error boundary UX rendering
+## Security
 
-Still recommended next:
+- Latest audit status: `0` vulnerabilities
+- Verify anytime with:
+  - `npm audit`
 
-- Integration tests for checkout -> order confirmation -> account history
-- Route protection and redirect tests
-- End-to-end tests for key shopping flow

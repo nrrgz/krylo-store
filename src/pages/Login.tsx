@@ -12,6 +12,7 @@ export function Login() {
   const redirect = searchParams.get('redirect') || '/account';
 
   const [email, setEmail] = useState('');
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
 
   const handleSignIn = (e: React.FormEvent) => {
@@ -23,7 +24,7 @@ export function Login() {
     }
 
     try {
-      dispatch(login({ email }));
+      dispatch(login({ email, remember }));
       navigate(redirect, { replace: true });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Login failed';
@@ -50,7 +51,13 @@ export function Login() {
             />
           </div>
           <div className="flex items-center gap-2 mt-1">
-            <input type="checkbox" id="remember" className="rounded border-gray-300" />
+            <input
+              type="checkbox"
+              id="remember"
+              className="rounded border-gray-300"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+            />
             <label htmlFor="remember" className="text-sm text-gray-600">
               Remember me
             </label>

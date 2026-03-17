@@ -77,6 +77,14 @@ describe('cartSlice', () => {
     expect(state.items[0].quantity).toBe(10);
   });
 
+  it('updateQty removes item when maxStock is 0', () => {
+    let state = cartReducer(initialState, addItem(mockCartItem));
+    expect(state.items.length).toBe(1);
+
+    state = cartReducer(state, updateQty({ productId: 'p1', selectedColor: 'Black', quantity: 2, maxStock: 0 }));
+    expect(state.items.length).toBe(0);
+  });
+
   it('calculates selectors correctly', () => {
     const state = cartReducer(initialState, addItem({ ...mockCartItem, quantity: 3 }));
 

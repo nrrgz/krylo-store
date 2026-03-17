@@ -65,9 +65,15 @@ export function ProductDetails() {
   const selectedColorIsValid =
     selectedColorState !== null && product.colors.some((color) => color.name === selectedColorState);
   const selectedColor = selectedColorIsValid ? selectedColorState : product.colors[0]?.name || '';
-  const selectedColorIndex = Math.max(0, product.colors.findIndex((color) => color.name === selectedColor));
-
-  const activeImageIndex = product.images[selectedImageIndex] ? selectedImageIndex : selectedColorIndex;
+  const fallbackImage = product.images[0] || '';
+  const mappedColorCandidate = product.imagesByColor?.[selectedColor];
+  const mappedColorImage =
+    mappedColorCandidate && product.images.includes(mappedColorCandidate)
+      ? mappedColorCandidate
+      : fallbackImage;
+  const manualImage = product.images[selectedImageIndex];
+  const activeImageSrc = manualImage || mappedColorImage || fallbackImage;
+  const activeImageIndex = Math.max(0, product.images.findIndex((img) => img === activeImageSrc));
   const stockAvailable = product.stockByColor[selectedColor] || 0;
   const isOutOfStock = stockAvailable === 0;
   const effectiveQuantity = Math.max(1, Math.min(quantity, Math.max(1, stockAvailable)));
@@ -104,7 +110,7 @@ export function ProductDetails() {
         productId: product.id,
         name: product.name,
         price: product.price,
-        image: product.images[activeImageIndex] || product.images[selectedColorIndex] || product.images[0] || '',
+        image: activeImageSrc,
         selectedColor: { name: selectedColor, hex: resolvedHex },
         quantity: effectiveQuantity,
       }),
@@ -121,9 +127,9 @@ export function ProductDetails() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-16 mb-24">
         <div className="flex flex-col gap-4">
           <div className="aspect-square bg-[var(--surface)] border border-[var(--border)] rounded-xl flex items-center justify-center text-gray-400 font-medium shadow-sm">
-            {product.images[activeImageIndex] ? (
+            {activeImageSrc ? (
               <img
-                src={product.images[activeImageIndex]}
+                src={activeImageSrc}
                 alt={product.name}
                 className="w-full h-full object-cover rounded-xl"
               />
@@ -197,11 +203,9 @@ export function ProductDetails() {
                       key={color.name}
                       onClick={() => {
                         setSelectedColorState(color.name);
-
-                        const colorIndex = product.colors.findIndex((c) => c.name === color.name);
-                        if (colorIndex >= 0 && product.images[colorIndex]) {
-                          setSelectedImageIndex(colorIndex);
-                        }
+                        const colorImage = product.imagesByColor?.[color.name];
+                        const colorImageIndex = colorImage ? product.images.findIndex((img) => img === colorImage) : -1;
+                        setSelectedImageIndex(colorImageIndex >= 0 ? colorImageIndex : 0);
 
                         const newStock = product.stockByColor[color.name] || 0;
                         setQuantity((prev) => Math.max(1, Math.min(prev, newStock === 0 ? 1 : newStock)));

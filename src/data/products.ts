@@ -1,6 +1,6 @@
 import type { Product } from '../types';
 
-export const products: Product[] = [
+const rawProducts: Product[] = [
   // Keyboards
   {
     id: 'p_kb_1',
@@ -12,6 +12,10 @@ export const products: Product[] = [
     rating: 4.8,
     reviewCount: 342,
     images: ['/images/products/keyboard-pro-1.png', '/images/products/keyboard-pro-2.png'],
+    imagesByColor: {
+      'Obsidian Black': '/images/products/keyboard-pro-1.png',
+      'Arctic White': '/images/products/keyboard-pro-2.png',
+    },
     colors: [
       { name: 'Obsidian Black', hex: '#111111' },
       { name: 'Arctic White', hex: '#F3F4F6' },
@@ -34,6 +38,10 @@ export const products: Product[] = [
     rating: 4.5,
     reviewCount: 128,
     images: ['/images/products/keyboard-lite-1.png' , '/images/products/keyboard-lite-2.png'],
+    imagesByColor: {
+      'Graphite': '/images/products/keyboard-lite-1.png',
+      'Mint Green': '/images/products/keyboard-lite-2.png',
+    },
     colors: [
       { name: 'Graphite', hex: '#374151' },
       { name: 'Mint Green', hex: '#A7F3D0' },
@@ -76,6 +84,10 @@ export const products: Product[] = [
     rating: 4.3,
     reviewCount: 210,
     images: ['/images/products/keyboard-aether-1.png', '/images/products/keyboard-aether-2.png'],
+    imagesByColor: {
+      'Cyber Yellow': '/images/products/keyboard-aether-1.png',
+      'Ghost White': '/images/products/keyboard-aether-2.png',
+    },
     colors: [
       { name: 'Cyber Yellow', hex: '#FBBF24' },
       { name: 'Ghost White', hex: '#F9FAFB' },
@@ -120,6 +132,10 @@ export const products: Product[] = [
     rating: 4.6,
     reviewCount: 412,
     images: ['/images/products/mouse-precision-1.png' , '/images/products/mouse-precision-2.png'],
+    imagesByColor: {
+      'Obsidian Black': '/images/products/mouse-precision-1.png',
+      'Arctic White': '/images/products/mouse-precision-2.png',
+    },
     colors: [
       { name: 'Obsidian Black', hex: '#111111' },
       { name: 'Arctic White', hex: '#F3F4F6' },
@@ -142,6 +158,10 @@ export const products: Product[] = [
     rating: 4.8,
     reviewCount: 220,
     images: ['/images/products/mouse-aero-1.png' , '/images/products/mouse-aero-2.png'],
+    imagesByColor: {
+      'Neon Pink': '/images/products/mouse-aero-1.png',
+      'Cyan Blue': '/images/products/mouse-aero-2.png',
+    },
     colors: [
       { name: 'Neon Pink', hex: '#EC4899' },
       { name: 'Cyan Blue', hex: '#06B6D4' },
@@ -184,6 +204,10 @@ export const products: Product[] = [
     rating: 4.2,
     reviewCount: 310,
     images: ['/images/products/mouse-travel-1.png' , '/images/products/mouse-travel-2.png'],
+    imagesByColor: {
+      'Silver': '/images/products/mouse-travel-1.png',
+      'Midnight Blue': '/images/products/mouse-travel-2.png',
+    },
     colors: [
       { name: 'Silver', hex: '#D1D5DB' },
       { name: 'Midnight Blue', hex: '#1E3A8A' },
@@ -228,6 +252,10 @@ export const products: Product[] = [
     rating: 4.9,
     reviewCount: 512,
     images: ['/images/products/audio-anc-1.png' , '/images/products/audio-anc-2.png'],
+    imagesByColor: {
+      'Obsidian Black': '/images/products/audio-anc-1.png',
+      'Sandstone': '/images/products/audio-anc-2.png',
+    },
     colors: [
       { name: 'Obsidian Black', hex: '#111111' },
       { name: 'Sandstone', hex: '#D6D3D1' },
@@ -250,6 +278,10 @@ export const products: Product[] = [
     rating: 4.6,
     reviewCount: 380,
     images: ['/images/products/audio-buds-1.png' , '/images/products/audio-buds-2.png'],
+    imagesByColor: {
+      'Gloss White': '/images/products/audio-buds-1.png',
+      'Midnight': '/images/products/audio-buds-2.png',
+    },
     colors: [
       { name: 'Gloss White', hex: '#FFFFFF' },
       { name: 'Midnight', hex: '#0F172A' },
@@ -292,6 +324,10 @@ export const products: Product[] = [
     rating: 4.5,
     reviewCount: 215,
     images: ['/images/products/audio-speakers-1.png' , '/images/products/audio-speakers-2.png'],
+    imagesByColor: {
+      'Walnut': '/images/products/audio-speakers-1.png',
+      'Oak': '/images/products/audio-speakers-2.png',
+    },
     colors: [
       { name: 'Walnut', hex: '#78350F' },
       { name: 'Oak', hex: '#B45309' },
@@ -336,6 +372,10 @@ export const products: Product[] = [
     rating: 4.8,
     reviewCount: 650,
     images: ['/images/products/charging-gan-1.png' , '/images/products/charging-gan-2.png'],
+    imagesByColor: {
+      'Space Gray': '/images/products/charging-gan-1.png',
+      'Arctic White': '/images/products/charging-gan-2.png',
+    },
     colors: [
       { name: 'Space Gray', hex: '#4B5563' },
       { name: 'Arctic White', hex: '#F3F4F6' },
@@ -358,6 +398,10 @@ export const products: Product[] = [
     rating: 4.5,
     reviewCount: 320,
     images: ['/images/products/charging-pad-1.png' , '/images/products/charging-pad-2.png'],
+    imagesByColor: {
+      'Silver': '/images/products/charging-pad-1.png',
+      'Black': '/images/products/charging-pad-2.png',
+    },
     colors: [
       { name: 'Silver', hex: '#D1D5DB' },
       { name: 'Black', hex: '#111111' },
@@ -380,6 +424,11 @@ export const products: Product[] = [
     rating: 4.9,
     reviewCount: 890,
     images: ['/images/products/cable-titan-1.png' , '/images/products/cable-titan-2.png' , '/images/products/cable-titan-3.png'],
+    imagesByColor: {
+      'Charcoal': '/images/products/cable-titan-1.png',
+      'Crimson': '/images/products/cable-titan-2.png',
+      'Navy': '/images/products/cable-titan-3.png',
+    },
     colors: [
       { name: 'Charcoal', hex: '#374151' },
       { name: 'Crimson', hex: '#DC2626' },
@@ -424,6 +473,11 @@ export const products: Product[] = [
     rating: 4.7,
     reviewCount: 230,
     images: ['/images/products/cable-coil-1.png' , '/images/products/cable-coil-2.png' , '/images/products/cable-coil-3.png'],
+    imagesByColor: {
+      'Lazer Purple': '/images/products/cable-coil-1.png',
+      'Mint': '/images/products/cable-coil-2.png',
+      'Carbon Black': '/images/products/cable-coil-3.png',
+    },
     colors: [
       { name: 'Lazer Purple', hex: '#8B5CF6' },
       { name: 'Mint', hex: '#6EE7B7' },
@@ -450,6 +504,11 @@ export const products: Product[] = [
     rating: 4.8,
     reviewCount: 420,
     images: ['/images/products/desk-mat-wool-1.png' , '/images/products/desk-mat-wool-2.png' , '/images/products/desk-mat-wool-3.png'],
+    imagesByColor: {
+      'Light Gray': '/images/products/desk-mat-wool-1.png',
+      'Charcoal': '/images/products/desk-mat-wool-2.png',
+      'Forest Green': '/images/products/desk-mat-wool-3.png',
+    },
     colors: [
       { name: 'Light Gray', hex: '#D1D5DB' },
       { name: 'Charcoal', hex: '#374151' },
@@ -474,6 +533,10 @@ export const products: Product[] = [
     rating: 4.6,
     reviewCount: 290,
     images: ['/images/products/desk-stand-1.png' , '/images/products/desk-stand-2.png'],
+    imagesByColor: {
+      'Silver': '/images/products/desk-stand-1.png',
+      'Space Gray': '/images/products/desk-stand-2.png',
+    },
     colors: [
       { name: 'Silver', hex: '#E5E7EB' },
       { name: 'Space Gray', hex: '#4B5563' },
@@ -487,4 +550,52 @@ export const products: Product[] = [
     },
   },
 ];
+
+const validateImagesByColor = (product: Product): Product => {
+  if (!product.imagesByColor) return product;
+
+  const colorSet = new Set(product.colors.map((color) => color.name));
+  const imageSet = new Set(product.images);
+  const sanitized: Record<string, string> = {};
+  const invalidMappings: string[] = [];
+
+  for (const [colorName, imagePath] of Object.entries(product.imagesByColor)) {
+    if (!colorSet.has(colorName) || !imageSet.has(imagePath)) {
+      invalidMappings.push(`${colorName} -> ${imagePath}`);
+      continue;
+    }
+    sanitized[colorName] = imagePath;
+  }
+
+  const hostname = (globalThis as { location?: { hostname?: string } }).location?.hostname;
+  const isLocalDev = hostname === 'localhost' || hostname === '127.0.0.1';
+
+  if (invalidMappings.length > 0 && isLocalDev) {
+    console.warn(
+      `[products] Invalid imagesByColor mappings for "${product.id}": ${invalidMappings.join(', ')}`,
+    );
+  }
+
+  const hasMappings = Object.keys(sanitized).length > 0;
+  return {
+    ...product,
+    imagesByColor: hasMappings ? sanitized : undefined,
+  };
+};
+
+export const products: Product[] = rawProducts.map(validateImagesByColor);
+
+export const resolveProductImageForColor = (
+  product: Product | undefined,
+  colorName: string | undefined,
+): string => {
+  if (!product) return '';
+
+  if (colorName) {
+    const mapped = product.imagesByColor?.[colorName];
+    if (mapped) return mapped;
+  }
+
+  return product.images[0] || '';
+};
 

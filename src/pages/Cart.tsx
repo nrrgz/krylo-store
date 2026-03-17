@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card'
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { selectCartItems, selectCartSubtotal, updateQty, removeItem, clearCart } from '../features/cart/cartSlice';
 import { products } from '../data/products';
+import { calculateTax } from '../lib/pricing';
 
 export function Cart() {
   const dispatch = useAppDispatch();
@@ -22,7 +23,7 @@ export function Cart() {
     dispatch(clearCart());
   };
 
-  const tax = subtotal * 0.08; // Mock 8% tax
+  const tax = calculateTax(subtotal);
   const total = subtotal + tax;
 
   if (items.length === 0) {
