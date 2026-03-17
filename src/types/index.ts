@@ -20,6 +20,7 @@ export interface Product {
   rating: number;
   reviewCount: number;
   images: string[];
+  imagesByColor?: Record<string, string>;
   colors: ProductColor[];
   tags: string[];
   isFeatured: boolean;

@@ -163,7 +163,7 @@ export function Checkout() {
                 Payment
               </h2>
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 text-center text-gray-500 text-sm">
-                Payment integration will be added here.
+                Secure card payments are not enabled in this demo yet. Your order is still saved and confirmed.
               </div>
             </section>
 
