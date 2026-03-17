@@ -1,7 +1,7 @@
-import { products } from '../../src/data/products';
-
 type CheckoutItemPayload = {
   productId: string;
+  name?: string;
+  price?: number;
   quantity: number;
   selectedColor?: {
     name: string;
@@ -62,17 +62,19 @@ const readBodyFromStream = async (req: RequestLike): Promise<unknown> => {
 
 const buildLineItems = (items: CheckoutItemPayload[]) => {
   return items.map((item) => {
-    const product = products.find((entry) => entry.id === item.productId);
-    if (!product) {
-      throw new Error(`Unknown product: ${item.productId}`);
+    const resolvedName = item.name?.trim() || `Product ${item.productId}`;
+    const resolvedPrice = item.price;
+
+    if (!Number.isFinite(resolvedPrice) || (resolvedPrice ?? 0) <= 0) {
+      throw new Error(`Invalid price for product: ${item.productId}`);
     }
 
     return {
       price_data: {
         currency: 'usd',
-        unit_amount: Math.round(product.price * 100),
+        unit_amount: Math.round((resolvedPrice ?? 0) * 100),
         product_data: {
-          name: product.name,
+          name: resolvedName,
           description: item.selectedColor?.name
             ? `Selected color: ${item.selectedColor.name}`
             : undefined,
