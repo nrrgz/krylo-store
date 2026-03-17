@@ -49,6 +49,9 @@ npm run dev
 - `npm run lint`: run ESLint
 - `npm run test -- --run`: run tests once
 - `npm run test:ui`: Vitest UI mode
+- `npm run test:e2e`: run Playwright end-to-end tests
+- `npm run test:e2e:ui`: run Playwright with interactive UI
+- `npm run test:e2e:headed`: run Playwright in headed mode
 - `npm run format`: format source files with Prettier
 
 ## Image Conventions
@@ -74,9 +77,18 @@ Included:
 - Cart reducer behavior
 - Auth storage service behavior
 - Catalog filtering/sorting/pagination utility behavior
+- Order lifecycle progression/reconciliation behavior
+- Product data integrity checks (`imagesByColor` mappings)
+- Browser E2E flow coverage (shopping, auth, route guards, edge paths)
 
 Still recommended next:
 
-- Integration tests for checkout -> order confirmation -> account history
-- Route protection and redirect tests
-- End-to-end tests for key shopping flow
+- Component-level tests for ProductDetails image/color interactions
+- Error-boundary rendering tests (route `errorElement`)
+- API-contract tests if/when backend integration is added
+
+## Security
+
+- Latest audit status: `0` vulnerabilities
+- Verify anytime with:
+  - `npm audit`

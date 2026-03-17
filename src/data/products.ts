@@ -1,6 +1,6 @@
 import type { Product } from '../types';
 
-export const products: Product[] = [
+const rawProducts: Product[] = [
   // Keyboards
   {
     id: 'p_kb_1',
@@ -550,4 +550,35 @@ export const products: Product[] = [
     },
   },
 ];
+
+const validateImagesByColor = (product: Product): Product => {
+  if (!product.imagesByColor) return product;
+
+  const colorSet = new Set(product.colors.map((color) => color.name));
+  const imageSet = new Set(product.images);
+  const sanitized: Record<string, string> = {};
+  const invalidMappings: string[] = [];
+
+  for (const [colorName, imagePath] of Object.entries(product.imagesByColor)) {
+    if (!colorSet.has(colorName) || !imageSet.has(imagePath)) {
+      invalidMappings.push(`${colorName} -> ${imagePath}`);
+      continue;
+    }
+    sanitized[colorName] = imagePath;
+  }
+
+  if (invalidMappings.length > 0 && import.meta.env.DEV) {
+    console.warn(
+      `[products] Invalid imagesByColor mappings for "${product.id}": ${invalidMappings.join(', ')}`,
+    );
+  }
+
+  const hasMappings = Object.keys(sanitized).length > 0;
+  return {
+    ...product,
+    imagesByColor: hasMappings ? sanitized : undefined,
+  };
+};
+
+export const products: Product[] = rawProducts.map(validateImagesByColor);
 

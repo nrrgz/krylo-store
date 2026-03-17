@@ -66,7 +66,11 @@ export function ProductDetails() {
     selectedColorState !== null && product.colors.some((color) => color.name === selectedColorState);
   const selectedColor = selectedColorIsValid ? selectedColorState : product.colors[0]?.name || '';
   const fallbackImage = product.images[0] || '';
-  const mappedColorImage = product.imagesByColor?.[selectedColor] || fallbackImage;
+  const mappedColorCandidate = product.imagesByColor?.[selectedColor];
+  const mappedColorImage =
+    mappedColorCandidate && product.images.includes(mappedColorCandidate)
+      ? mappedColorCandidate
+      : fallbackImage;
   const manualImage = product.images[selectedImageIndex];
   const activeImageSrc = manualImage || mappedColorImage || fallbackImage;
   const activeImageIndex = Math.max(0, product.images.findIndex((img) => img === activeImageSrc));
