@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, Navigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -28,6 +28,11 @@ function createOrderId(): string {
   return `ORD-${crypto.randomUUID()}`;
 }
 
+function createOrderIdFromSession(sessionId: string): string {
+  const normalized = sessionId.replace(/[^a-zA-Z0-9]/g, '').slice(-24);
+  return normalized ? `ORD-${normalized}` : createOrderId();
+}
+
 export function Checkout() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -38,6 +43,7 @@ export function Checkout() {
   const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
   const [isFinalizingPayment, setIsFinalizingPayment] = useState(false);
+  const finalizationLockRef = useRef<string | null>(null);
 
   const {
     register,
@@ -59,20 +65,23 @@ export function Checkout() {
     if (paymentStatus !== 'success' || !checkoutSessionId || isFinalizingPayment || !user) return;
 
     const processedKey = `krylo-processed-session-${checkoutSessionId}`;
-    if (sessionStorage.getItem(processedKey)) return;
+    if (sessionStorage.getItem(processedKey) === 'done') return;
+    if (finalizationLockRef.current === checkoutSessionId) return;
 
     const finalize = async () => {
+      finalizationLockRef.current = checkoutSessionId;
       try {
         setIsPlacingOrder(true);
         setIsFinalizingPayment(true);
         setCheckoutError(null);
+        sessionStorage.setItem(processedKey, 'pending');
 
         const verification = await verifyCheckoutSession({ sessionId: checkoutSessionId });
         if (!verification.paid) {
           throw new Error('Payment was not completed.');
         }
 
-        const orderId = createOrderId();
+        const orderId = createOrderIdFromSession(checkoutSessionId);
         const createdAt = new Date().toISOString();
         const order: Order = {
           orderId,
@@ -98,18 +107,20 @@ export function Checkout() {
         const orderKey = `krylo-orders-${user.id}`;
         const existing = localStorage.getItem(orderKey);
         let userOrders = existing ? JSON.parse(existing) : [];
-        userOrders = [order, ...userOrders];
+        userOrders = [order, ...userOrders.filter((storedOrder: Order) => storedOrder.orderId !== orderId)];
         localStorage.setItem(orderKey, JSON.stringify(userOrders));
 
-        sessionStorage.setItem(processedKey, 'true');
+        sessionStorage.setItem(processedKey, 'done');
         dispatch(clearCart());
         navigate(`/order/${orderId}`, { replace: true });
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Could not finalize payment.';
         setCheckoutError(message);
+        sessionStorage.removeItem(processedKey);
       } finally {
         setIsPlacingOrder(false);
         setIsFinalizingPayment(false);
+        finalizationLockRef.current = null;
       }
     };
 

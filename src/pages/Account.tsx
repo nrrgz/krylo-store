@@ -7,6 +7,7 @@ import { Badge } from '../components/ui/Badge';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
 import type { Order, OrderStatus } from '../types';
 import { reconcileOrders } from '../lib/orderLifecycle';
+import { products } from '../data/products';
 
 const statusClasses: Record<OrderStatus, string> = {
   processing: 'bg-amber-100 text-amber-800 border-amber-200',
@@ -34,7 +35,6 @@ export function Account() {
         }
       };
 
-      // These help the current tab refresh if localStorage changed elsewhere.
       const onFocus = () => notify();
       const onVisibility = () => notify();
 
@@ -88,7 +88,7 @@ export function Account() {
     dispatch(logout());
   };
 
-  if (!user) return null; // protected route handles redirect
+  if (!user) return null;
 
   return (
     <div className="container-base py-12">
@@ -128,45 +128,82 @@ export function Account() {
                 <p className="text-gray-500 text-sm">You haven't placed any orders yet.</p>
               ) : (
                 <div className="flex flex-col gap-4">
-                  {orders.map((order) => (
-                    <div key={order.orderId} className="border border-[var(--border)] rounded-lg p-4">
-                      <div className="flex justify-between items-start mb-2 gap-4">
-                        <div>
-                          <p className="font-semibold text-gray-900">{order.orderId}</p>
-                          <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge className={statusClasses[order.status]}>{order.status}</Badge>
-                          <p className="font-bold text-gray-900">${order.totals.total.toFixed(2)}</p>
-                        </div>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <div className="text-sm text-gray-600">
-                          {order.items.length} item{order.items.length > 1 ? 's' : ''}
-                        </div>
-                        <Link to={`/order/${order.orderId}`}>
-                          <Button size="sm" variant="ghost">View details</Button>
-                        </Link>
-                      </div>
-                      {order.statusHistory.length > 0 && (
-                        <div className="mt-3 border-t border-[var(--border)] pt-3">
-                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                            Status History
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            {order.statusHistory.map((event) => (
-                              <span
-                                key={`${order.orderId}-${event.status}-${event.at}`}
-                                className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1 text-xs text-gray-700"
-                              >
-                                {event.status} • {new Date(event.at).toLocaleDateString()}
-                              </span>
-                            ))}
+                  {orders.map((order) => {
+                    const firstItem = order.items[0];
+                    const remainingItems = Math.max(0, order.items.length - 1);
+                    const shortOrderId = order.orderId.replace('ORD-', '').slice(0, 8).toUpperCase();
+                    const productFallbackImage = firstItem
+                      ? products.find((product) => product.id === firstItem.productId)?.images[0] || ''
+                      : '';
+                    const thumbnailSrc = firstItem?.image || productFallbackImage;
+
+                    return (
+                      <div key={order.orderId} className="border border-[var(--border)] rounded-lg p-4">
+                        <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+                          <div className="flex gap-3">
+                            <div className="w-10 h-10 rounded-md bg-[var(--surface-2)] overflow-hidden flex-shrink-0 border border-[var(--border)]">
+                              {thumbnailSrc ? (
+                                <img
+                                  src={thumbnailSrc}
+                                  alt={firstItem?.name || 'Ordered item'}
+                                  className="w-full h-full object-cover block"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-xs text-gray-400">
+                                  Item
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-gray-900">
+                                {firstItem?.name || `Order ${order.orderId}`}
+                              </p>
+                              {remainingItems > 0 && (
+                                <p className="text-sm text-gray-600">
+                                  +{remainingItems} more item{remainingItems > 1 ? 's' : ''}
+                                </p>
+                              )}
+                              <p className="text-xs text-gray-500 mt-1">
+                                Order #{shortOrderId} - {new Date(order.createdAt).toLocaleDateString()}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between sm:justify-end gap-3">
+                            <Badge className={statusClasses[order.status]}>{order.status}</Badge>
+                            <p className="font-bold text-gray-900">${order.totals.total.toFixed(2)}</p>
                           </div>
                         </div>
-                      )}
-                    </div>
-                  ))}
+
+                        <div className="flex justify-between items-center mt-4">
+                          <div className="text-sm text-gray-600">
+                            {order.items.length} item{order.items.length > 1 ? 's' : ''}
+                          </div>
+                          <Link to={`/order/${order.orderId}`}>
+                            <Button size="sm" variant="secondary">View details</Button>
+                          </Link>
+                        </div>
+
+                        {order.statusHistory.length > 0 && (
+                          <div className="mt-3 border-t border-[var(--border)] pt-3">
+                            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                              Status History
+                            </p>
+                            <div className="flex flex-wrap gap-2">
+                              {order.statusHistory.map((event) => (
+                                <span
+                                  key={`${order.orderId}-${event.status}-${event.at}`}
+                                  className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1 text-xs text-gray-700"
+                                >
+                                  {event.status} - {new Date(event.at).toLocaleDateString()}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
