@@ -5,6 +5,7 @@ type VerifyCheckoutPayload = {
 type RequestLike = {
   method?: string;
   body?: unknown;
+  [Symbol.asyncIterator]?: () => AsyncIterator<unknown>;
 };
 
 type ResponseLike = {
@@ -27,13 +28,30 @@ const parseBody = (rawBody: unknown): Partial<VerifyCheckoutPayload> => {
   return {};
 };
 
+const readBodyFromStream = async (req: RequestLike): Promise<unknown> => {
+  if (!req[Symbol.asyncIterator]) return undefined;
+
+  const chunks: string[] = [];
+  for await (const chunk of req as AsyncIterable<unknown>) {
+    if (typeof chunk === 'string') {
+      chunks.push(chunk);
+    } else if (chunk instanceof Uint8Array) {
+      chunks.push(Buffer.from(chunk).toString('utf8'));
+    }
+  }
+
+  if (chunks.length === 0) return undefined;
+  return chunks.join('');
+};
+
 export default async function handler(req: RequestLike, res: ResponseLike) {
   if (req.method !== 'POST') {
     res.status(405).json({ message: 'Method not allowed' });
     return;
   }
 
-  const payload = parseBody(req.body);
+  const rawBody = req.body ?? (await readBodyFromStream(req));
+  const payload = parseBody(rawBody);
   const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
 
   if (!payload.sessionId) {
