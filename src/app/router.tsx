@@ -11,11 +11,13 @@ import { Login } from '../pages/Login';
 import { Register } from '../pages/Register';
 import { Account } from '../pages/Account';
 import { ProtectedRoute } from './ProtectedRoute';
+import { RouteError } from '../pages/RouteError';
 
 export const router = createBrowserRouter([
   {
     path: '/',
     element: <Layout />,
+    errorElement: <RouteError />,
     children: [
       {
         index: true,

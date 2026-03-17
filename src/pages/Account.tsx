@@ -148,6 +148,23 @@ export function Account() {
                           <Button size="sm" variant="ghost">View details</Button>
                         </Link>
                       </div>
+                      {order.statusHistory.length > 0 && (
+                        <div className="mt-3 border-t border-[var(--border)] pt-3">
+                          <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
+                            Status History
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {order.statusHistory.map((event) => (
+                              <span
+                                key={`${order.orderId}-${event.status}-${event.at}`}
+                                className="inline-flex items-center rounded-full border border-[var(--border)] bg-[var(--surface-2)] px-2 py-1 text-xs text-gray-700"
+                              >
+                                {event.status} • {new Date(event.at).toLocaleDateString()}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>

@@ -60,4 +60,13 @@ describe('authStorage', () => {
     expect(authStorage.loadSessionUser()).toBeNull();
     expect(localStorage.getItem('krylo-auth-v1')).toBeNull();
   });
+
+  it('returns session expiry timestamp for active sessions', () => {
+    authStorage.registerUser({ email: 'user@example.com', name: 'User Name', remember: true });
+
+    const expiryMs = authStorage.getSessionExpiryMs();
+    expect(expiryMs).not.toBeNull();
+    expect(typeof expiryMs).toBe('number');
+    expect((expiryMs ?? 0) > Date.now()).toBe(true);
+  });
 });

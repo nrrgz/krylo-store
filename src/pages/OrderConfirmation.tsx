@@ -154,6 +154,23 @@ export function OrderConfirmation() {
               <span>${order.totals.total.toFixed(2)}</span>
             </div>
           </div>
+
+          {order.statusHistory.length > 0 && (
+            <div className="pt-5 mt-5 border-t border-gray-200">
+              <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-600 mb-3">Status Timeline</h3>
+              <div className="space-y-2">
+                {order.statusHistory.map((event) => (
+                  <div
+                    key={`${order.orderId}-${event.status}-${event.at}`}
+                    className="flex items-center justify-between rounded-md border border-[var(--border)] bg-[var(--surface-2)] px-3 py-2"
+                  >
+                    <span className="text-sm font-medium text-gray-900 capitalize">{event.status}</span>
+                    <span className="text-xs text-gray-500">{new Date(event.at).toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

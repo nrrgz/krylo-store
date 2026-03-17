@@ -13,6 +13,7 @@ export function Register() {
 
   const [email, setEmail] = useState('');
   const [name, setName] = useState('');
+  const [remember, setRemember] = useState(false);
   const [error, setError] = useState('');
 
   const handleRegister = (e: React.FormEvent) => {
@@ -28,7 +29,7 @@ export function Register() {
     }
 
     try {
-      dispatch(register({ email, name }));
+      dispatch(register({ email, name, remember }));
       navigate(redirect, { replace: true });
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : 'Registration failed';
@@ -64,6 +65,18 @@ export function Register() {
               onChange={(event) => setEmail(event.target.value)}
               required
             />
+          </div>
+          <div className="flex items-center gap-2 mt-1">
+            <input
+              type="checkbox"
+              id="remember"
+              className="rounded border-gray-300"
+              checked={remember}
+              onChange={(event) => setRemember(event.target.checked)}
+            />
+            <label htmlFor="remember" className="text-sm text-gray-600">
+              Remember me
+            </label>
           </div>
           <Button type="submit" size="lg" className="mt-4">
             Create Account

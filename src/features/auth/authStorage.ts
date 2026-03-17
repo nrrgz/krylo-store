@@ -29,6 +29,14 @@ interface AuthSession {
   remember: boolean;
 }
 
+const parseSession = (raw: string): Partial<AuthSession> | null => {
+  try {
+    return JSON.parse(raw) as Partial<AuthSession>;
+  } catch {
+    return null;
+  }
+};
+
 export const authStorage = {
   loadSessionUser(): User | null {
     const raw = localStorage.getItem(AUTH_STORAGE_KEY);
@@ -79,6 +87,20 @@ export const authStorage = {
       remember,
     };
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
+  },
+
+  getSessionExpiryMs(): number | null {
+    const user = this.loadSessionUser();
+    if (!user) return null;
+
+    const raw = localStorage.getItem(AUTH_STORAGE_KEY);
+    if (!raw) return null;
+
+    const session = parseSession(raw);
+    if (!session?.expiresAt) return null;
+
+    const expiresAt = new Date(session.expiresAt).getTime();
+    return Number.isFinite(expiresAt) ? expiresAt : null;
   },
 
   clearSessionUser(): void {
